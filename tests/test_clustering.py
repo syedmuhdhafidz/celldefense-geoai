@@ -195,3 +195,74 @@ def test_invalid_cluster_distance_is_rejected(
             scored_scenario,
             maximum_distance_metres=0.0,
         )
+        
+        
+def test_cluster_summary_ranks_higher_threat_first() -> None:
+    clustered = pd.DataFrame(
+        {
+            "cluster_id": [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+            ],
+            "timestamp": pd.date_range(
+                start="2026-08-01 08:00:00+08:00",
+                periods=6,
+                freq="s",
+            ),
+            "latitude": [
+                2.9200,
+                2.9201,
+                2.9202,
+                2.9400,
+                2.9401,
+                2.9402,
+            ],
+            "longitude": [
+                101.6600,
+                101.6601,
+                101.6602,
+                101.6800,
+                101.6801,
+                101.6802,
+            ],
+            "threat_score": [
+                80.0,
+                82.0,
+                84.0,
+                95.0,
+                96.0,
+                97.0,
+            ],
+            "cell_id": [
+                "cell-001",
+                "cell-001",
+                "cell-001",
+                "cell-002",
+                "cell-002",
+                "cell-002",
+            ],
+            "scenario": ["baseline"] * 6,
+            "is_anomaly": [False] * 6,
+        }
+    )
+
+    summary = summarise_alert_clusters(
+        clustered
+    )
+
+    assert list(summary["priority_rank"]) == [
+        1,
+        2,
+    ]
+    assert list(summary["cluster_id"]) == [
+        1,
+        0,
+    ]
+    assert (
+        summary.iloc[0]["maximum_threat_score"]
+        == 97.0
+    )

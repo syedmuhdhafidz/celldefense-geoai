@@ -326,8 +326,8 @@ def add_investigation_clusters(
 
     for cluster in cluster_summary.itertuples():
         priority_number = int(
-            cluster.cluster_id
-        ) + 1
+            cluster.priority_rank
+        )
 
         folium.Circle(
             location=[
@@ -575,9 +575,8 @@ def main() -> None:
                 cluster_summary.copy(deep=True)
             )
             display_summary["priority"] = (
-                display_summary["cluster_id"]
+                display_summary["priority_rank"]
                 .astype(int)
-                + 1
             )
             display_summary = display_summary.rename(
                 columns={
@@ -644,12 +643,14 @@ def main() -> None:
                 "No feature diagnostics are available."
             )
         else:
+            cluster_by_priority = {
+                int(cluster.priority_rank): int(
+                    cluster.cluster_id
+                )
+                for cluster in cluster_summary.itertuples()
+            }
             priority_options = sorted(
-                (
-                    diagnostics["cluster_id"]
-                    .astype(int)
-                    + 1
-                ).unique()
+                cluster_by_priority
             )
 
             selected_priority = st.selectbox(
@@ -660,7 +661,9 @@ def main() -> None:
                 ),
             )
             selected_cluster_id = (
-                int(selected_priority) - 1
+                cluster_by_priority[
+                    int(selected_priority)
+                ]
             )
 
             cluster_evidence = diagnostics.loc[

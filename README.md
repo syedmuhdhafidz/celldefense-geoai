@@ -37,8 +37,9 @@ The working prototype:
 5. Produces a threat score from 0 to 100 for every observation.
 6. Applies cell-aware DBSCAN spatio-temporal corroboration.
 7. Separates isolated point alerts from investigation-worthy clusters.
-8. Generates human-readable feature diagnostics.
-9. Displays results in static maps and an interactive Streamlit dashboard.
+8. Ranks investigation areas by threat severity and corroborated alert count.
+9. Generates human-readable feature diagnostics.
+10. Displays results in static maps and an interactive Streamlit dashboard.
 
 ## Implemented detection scope
 
@@ -75,6 +76,7 @@ flowchart TD
 | Anomaly detection | Isolation Forest trained on independent baseline data | Point-level prediction and threat score |
 | Spatio-temporal corroboration | Cell-aware DBSCAN with 200-metre and 120-second neighbourhood limits in WGS 84 / UTM zone 47N | Dense investigation clusters and isolated noise |
 | Cell-identity control | DBSCAN applied independently per reported cell | Different cells cannot contaminate the same cluster |
+| Site prioritisation | Rank by maximum threat score, then corroborated observation count | Transparent operational priority queue |
 | Explainability | Cluster medians compared with the normal 1st–99th percentile range | Human-readable threat evidence |
 
 ## Synthetic study area and data

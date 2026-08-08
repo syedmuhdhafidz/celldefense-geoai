@@ -10,6 +10,7 @@ GEOGRAPHIC_CRS = "EPSG:4326"
 CYBERJAYA_PROJECTED_CRS = "EPSG:32647"
 
 CLUSTER_SUMMARY_COLUMNS = [
+    "priority_rank",
     "cluster_id",
     "observation_count",
     "start_time",
@@ -300,7 +301,7 @@ def summarise_alert_clusters(
         columns=CLUSTER_SUMMARY_COLUMNS,
     )
 
-    return summary.sort_values(
+    ranked_summary = summary.sort_values(
         by=[
             "maximum_threat_score",
             "observation_count",
@@ -308,3 +309,14 @@ def summarise_alert_clusters(
         ascending=[False, False],
         ignore_index=True,
     )
+
+    ranked_summary["priority_rank"] = np.arange(
+        start=1,
+        stop=len(ranked_summary) + 1,
+        dtype=int,
+    )
+
+    return ranked_summary.loc[
+        :,
+        CLUSTER_SUMMARY_COLUMNS,
+    ] 
