@@ -1,4 +1,4 @@
-"""Spatial corroboration and alert-cluster summarisation."""
+"""Spatio-temporal corroboration and alert-cluster summarisation."""
 
 import geopandas as gpd
 import numpy as np
@@ -180,7 +180,7 @@ def cluster_alerts(
 def summarise_alert_clusters(
     clustered_observations: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Create one operational summary row per spatial cluster."""
+    """Create one operational summary per corroborated alert cluster."""
 
     required_columns = {
         "cluster_id",

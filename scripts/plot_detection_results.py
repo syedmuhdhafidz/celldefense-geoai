@@ -289,7 +289,7 @@ def main() -> None:
     )
 
     axis.set_title(
-        "CellDefense GeoAI: Detection and Spatial Corroboration\n"
+        "CellDefense GeoAI: Detection and Spatio-Temporal Corroboration\n"
         "Suspicious base-station anomaly triage",
         fontsize=15,
         fontweight="bold",

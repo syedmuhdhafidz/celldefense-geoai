@@ -261,7 +261,7 @@ def add_isolated_alerts(
                     f"<br>Cell ID: {alert.cell_id}"
                     f"<br>Threat score: "
                     f"{alert.threat_score:.1f}/100"
-                    "<br>Decision: not spatially corroborated"
+                    "<br>Decision: not spatio-temporally corroborated"
                 ),
                 max_width=280,
             ),
@@ -540,7 +540,7 @@ def main() -> None:
 
     with map_tab:
         st.markdown(
-            "### Spatial alert corroboration"
+            "### Spatio-temporal alert corroboration"
         )
         st.write(
             "Use the layer control in the upper-right "
@@ -810,7 +810,7 @@ def main() -> None:
         )
 
         st.caption(
-            "Spatial corroboration subsequently retained "
+            "Spatio-temporal corroboration subsequently retained "
             "one 90-observation investigation cluster and "
             "treated all 14 false-positive point alerts as "
             "isolated noise."
@@ -841,7 +841,7 @@ def main() -> None:
 - The benchmark covers one cloned-cell-style geographic inconsistency scenario.
 - Model performance on synthetic data does not establish real-world accuracy.
 - Coverage propagation is simplified and does not fully model terrain, buildings, antenna patterns or network optimisation.
-- Isolated alerts are retained for audit but are not escalated without spatial corroboration.
+- Isolated alerts are retained for audit but are not escalated without spatio-temporal corroboration.
             """
         )
 

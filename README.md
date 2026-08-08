@@ -35,7 +35,7 @@ The working prototype:
 3. Calculates radio and geospatial consistency features.
 4. Trains an unsupervised Isolation Forest using baseline observations only.
 5. Produces a threat score from 0 to 100 for every observation.
-6. Applies cell-aware DBSCAN spatial corroboration.
+6. Applies cell-aware DBSCAN spatio-temporal corroboration.
 7. Separates isolated point alerts from investigation-worthy clusters.
 8. Generates human-readable feature diagnostics.
 9. Displays results in static maps and an interactive Streamlit dashboard.
@@ -61,7 +61,7 @@ signal much stronger than expected at that distance.
 flowchart TD
     A["Synthetic RF observations"] --> B["Geospatial feature engineering"]
     B --> C["Isolation Forest threat scoring"]
-    C --> D["Cell-aware spatial corroboration"]
+    C --> D["Cell-aware spatio-temporal corroboration"]
     D --> E["Dashboard and investigation queue"]
 ```
 
@@ -73,7 +73,7 @@ flowchart TD
 | Distance analysis | Haversine distance to the reported reference cell | Distance in metres |
 | Propagation comparison | Simplified log-distance signal model | Expected RSRP and signal residual |
 | Anomaly detection | Isolation Forest trained on independent baseline data | Point-level prediction and threat score |
-| Spatial corroboration | DBSCAN in WGS 84 / UTM zone 47N | Dense investigation clusters and spatial noise |
+| Spatio-temporal corroboration | Cell-aware DBSCAN with 200-metre and 120-second neighbourhood limits in WGS 84 / UTM zone 47N | Dense investigation clusters and isolated noise |
 | Cell-identity control | DBSCAN applied independently per reported cell | Different cells cannot contaminate the same cluster |
 | Explainability | Cluster medians compared with the normal 1st–99th percentile range | Human-readable threat evidence |
 
@@ -149,7 +149,7 @@ This command:
 2. Generates the cloned-cell-style scenario.
 3. Trains and evaluates the anomaly detector.
 4. Scores the scenario observations.
-5. Performs cell-aware spatial clustering.
+5. Performs cell-aware spatio-temporal clustering.
 6. Generates cluster diagnostics.
 7. Rebuilds the static maps.
 
@@ -274,8 +274,9 @@ cybersecurity requirements.
   patterns, beamforming or network optimisation.
 - The reference inventory is complete and clean, unlike many real-world
   databases.
-- Spatial corroboration currently uses distance and reported cell identity;
-  additional temporal separation should be evaluated in future work.
+- Spatio-temporal corroboration currently uses fixed 200-metre and 120-second
+  neighbourhood limits; threshold sensitivity requires validation on
+  independent real-world data.
 - Road-network response routing is a planned supporting feature and is not
   part of the current implemented MVP.
 

@@ -1,4 +1,4 @@
-"""Cluster scored alerts into investigation areas."""
+"""Corroborate scored alerts into investigation areas."""
 
 from pathlib import Path
 
@@ -91,7 +91,7 @@ def main() -> None:
         alert_mask & (~clustered_mask)
     )
 
-    print("CellDefense spatial clustering complete")
+    print("CellDefense spatio-temporal clustering complete")
     print(
         "Point alerts before clustering: "
         f"{int(alert_mask.sum()):,}"

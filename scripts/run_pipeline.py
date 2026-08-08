@@ -31,7 +31,7 @@ PIPELINE_STAGES: list[PipelineStage] = [
         train_detector,
     ),
     (
-        "Perform cell-aware spatial corroboration",
+        "Perform cell-aware spatio-temporal corroboration",
         cluster_alerts,
     ),
     (

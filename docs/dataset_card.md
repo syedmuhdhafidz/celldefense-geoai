@@ -212,7 +212,7 @@ Appropriate uses include:
 
 - testing geospatial feature engineering;
 - benchmarking unsupervised anomaly detection;
-- demonstrating spatial alert corroboration;
+- demonstrating spatio-temporal alert corroboration;
 - developing investigation-priority maps;
 - evaluating human-readable threat explanations; and
 - hackathon demonstrations and educational research.
