@@ -29,11 +29,12 @@ def cluster_alerts(
     maximum_distance_metres: float = 200.0,
     minimum_observations: int = 5,
 ) -> pd.DataFrame:
-    """Assign spatial cluster identifiers to predicted alerts."""
+    """Assign cell-aware spatial cluster identifiers to alerts."""
 
     required_columns = {
         "latitude",
         "longitude",
+        "cell_id",
         "predicted_anomaly",
     }
     missing_columns = required_columns - set(
@@ -66,37 +67,67 @@ def cluster_alerts(
     if alert_rows.empty:
         return result
 
-    alert_geodata = gpd.GeoDataFrame(
-        alert_rows[
-            [
-                "latitude",
-                "longitude",
-            ]
-        ].copy(),
-        geometry=gpd.points_from_xy(
-            alert_rows["longitude"],
-            alert_rows["latitude"],
-        ),
-        crs=GEOGRAPHIC_CRS,
-    ).to_crs(CYBERJAYA_PROJECTED_CRS)
+    next_cluster_id = 0
 
-    coordinates = np.column_stack(
-        (
-            alert_geodata.geometry.x,
-            alert_geodata.geometry.y,
+    for _, cell_alerts in alert_rows.groupby(
+        "cell_id",
+        sort=True,
+        dropna=False,
+    ):
+        alert_geodata = gpd.GeoDataFrame(
+            cell_alerts[
+                [
+                    "latitude",
+                    "longitude",
+                ]
+            ].copy(),
+            geometry=gpd.points_from_xy(
+                cell_alerts["longitude"],
+                cell_alerts["latitude"],
+            ),
+            crs=GEOGRAPHIC_CRS,
+        ).to_crs(CYBERJAYA_PROJECTED_CRS)
+
+        coordinates = np.column_stack(
+            (
+                alert_geodata.geometry.x,
+                alert_geodata.geometry.y,
+            )
         )
-    )
 
-    cluster_labels = DBSCAN(
-        eps=maximum_distance_metres,
-        min_samples=minimum_observations,
-        metric="euclidean",
-    ).fit_predict(coordinates)
+        local_labels = DBSCAN(
+            eps=maximum_distance_metres,
+            min_samples=minimum_observations,
+            metric="euclidean",
+        ).fit_predict(coordinates)
 
-    result.loc[
-        alert_rows.index,
-        "cluster_id",
-    ] = cluster_labels.astype(int)
+        global_labels = np.full(
+            shape=len(local_labels),
+            fill_value=-1,
+            dtype=int,
+        )
+
+        local_cluster_ids = sorted(
+            cluster_id
+            for cluster_id in np.unique(
+                local_labels
+            )
+            if cluster_id >= 0
+        )
+
+        for local_cluster_id in local_cluster_ids:
+            cluster_mask = (
+                local_labels == local_cluster_id
+            )
+            global_labels[
+                cluster_mask
+            ] = next_cluster_id
+            next_cluster_id += 1
+
+        result.loc[
+            cell_alerts.index,
+            "cluster_id",
+        ] = global_labels
 
     return result
 

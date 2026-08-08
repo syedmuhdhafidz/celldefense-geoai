@@ -83,6 +83,46 @@ def test_non_alerts_remain_unclustered(
     assert set(non_alerts["cluster_id"]) == {-1}
 
 
+def test_alerts_from_different_cells_are_not_merged() -> None:
+    alerts = pd.DataFrame(
+        {
+            "latitude": [2.9205] * 6,
+            "longitude": [101.6685] * 6,
+            "cell_id": [
+                "cell-001",
+                "cell-001",
+                "cell-001",
+                "cell-001",
+                "cell-001",
+                "cell-004",
+            ],
+            "predicted_anomaly": [True] * 6,
+        }
+    )
+
+    clustered = cluster_alerts(
+        alerts,
+        maximum_distance_metres=200.0,
+        minimum_observations=5,
+    )
+
+    cell_001_clusters = set(
+        clustered.loc[
+            clustered["cell_id"] == "cell-001",
+            "cluster_id",
+        ]
+    )
+    cell_004_clusters = set(
+        clustered.loc[
+            clustered["cell_id"] == "cell-004",
+            "cluster_id",
+        ]
+    )
+
+    assert cell_001_clusters == {0}
+    assert cell_004_clusters == {-1}
+
+
 def test_no_alerts_produce_empty_summary(
     scored_scenario: pd.DataFrame,
 ) -> None:
