@@ -1,6 +1,7 @@
 """Feature engineering for CellDefense anomaly detection."""
 
 from collections.abc import Sequence
+from math import log1p
 
 import pandas as pd
 
@@ -33,17 +34,12 @@ METADATA_COLUMNS = [
 ]
 
 MODEL_FEATURE_COLUMNS = [
-    "rsrp_dbm",
-    "rsrq_db",
-    "sinr_db",
     "neighbour_count",
     "handover_event_int",
-    "rat_is_nr",
     "known_cell",
-    "distance_to_reported_cell_m",
-    "expected_rsrp_dbm",
     "rsrp_residual_db",
     "absolute_rsrp_residual_db",
+    "signal_distance_inconsistency",
 ]
 
 
@@ -66,6 +62,7 @@ def build_feature_table(
     distance_values: list[float] = []
     expected_rsrp_values: list[float] = []
     residual_values: list[float] = []
+    inconsistency_values: list[float] = []
 
     for observation in observations.itertuples(
         index=False
@@ -102,11 +99,20 @@ def build_feature_table(
             float(observation.rsrp_dbm)
             - expected_signal
         )
+        signal_distance_inconsistency = (
+            max(residual, 0.0)
+            * log1p(
+                distance_metres / 1000.0
+            )
+        )
 
         known_cell_values.append(known_cell)
         distance_values.append(distance_metres)
         expected_rsrp_values.append(expected_signal)
         residual_values.append(residual)
+        inconsistency_values.append(
+            signal_distance_inconsistency
+        )
 
     features = observations[
         METADATA_COLUMNS
@@ -147,7 +153,19 @@ def build_feature_table(
         round(abs(value), 2)
         for value in residual_values
     ]
+    features["signal_distance_inconsistency"] = [
+        round(value, 2)
+        for value in inconsistency_values
+    ]
+
+    diagnostic_columns = [
+        "rsrp_dbm",
+        "distance_to_reported_cell_m",
+        "expected_rsrp_dbm",
+    ]
 
     return features[
-        METADATA_COLUMNS + MODEL_FEATURE_COLUMNS
+        METADATA_COLUMNS
+        + diagnostic_columns
+        + MODEL_FEATURE_COLUMNS
     ]

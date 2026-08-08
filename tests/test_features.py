@@ -61,7 +61,17 @@ def test_cloned_cell_has_larger_signal_residual() -> None:
         "absolute_rsrp_residual_db",
     ].median()
 
+    baseline_inconsistency = features.loc[
+        ~features["is_anomaly"],
+        "signal_distance_inconsistency",
+    ].median()
+    anomaly_inconsistency = features.loc[
+        features["is_anomaly"],
+        "signal_distance_inconsistency",
+    ].median()
+
     assert anomaly_residual > baseline_residual
+    assert anomaly_inconsistency > baseline_inconsistency
 
 
 def test_unknown_cell_uses_safe_fallback_features() -> None:
