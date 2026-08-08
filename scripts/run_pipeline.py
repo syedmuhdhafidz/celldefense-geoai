@@ -8,6 +8,9 @@ from generate_baseline import main as generate_baseline
 from generate_scenario_dataset import (
     main as generate_scenario_dataset,
 )
+from plan_response_routes import (
+    main as plan_response_routes,
+)
 from plot_baseline import main as plot_baseline
 from plot_detection_results import (
     main as plot_detection_results,
@@ -37,6 +40,10 @@ PIPELINE_STAGES: list[PipelineStage] = [
     (
         "Generate cluster diagnostics",
         diagnose_clusters,
+    ),
+    (
+        "Plan supporting synthetic access routes",
+        plan_response_routes,
     ),
     (
         "Plot baseline network",

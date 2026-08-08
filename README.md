@@ -39,7 +39,8 @@ The working prototype:
 7. Separates isolated point alerts from investigation-worthy clusters.
 8. Ranks investigation areas by threat severity and corroborated alert count.
 9. Generates human-readable feature diagnostics.
-10. Displays results in static maps and an interactive Streamlit dashboard.
+10. Plans a supporting access path along the nearest fictional route.
+11. Displays results in static maps and an interactive Streamlit dashboard.
 
 ## Implemented detection scope
 
@@ -77,6 +78,7 @@ flowchart TD
 | Spatio-temporal corroboration | Cell-aware DBSCAN with 200-metre and 120-second neighbourhood limits in WGS 84 / UTM zone 47N | Dense investigation clusters and isolated noise |
 | Cell-identity control | DBSCAN applied independently per reported cell | Different cells cannot contaminate the same cluster |
 | Site prioritisation | Rank by maximum threat score, then corroborated observation count | Transparent operational priority queue |
+| Supporting access planning | Select nearest synthetic route and minimise travel from either route endpoint | Fictional staging point, access point and route distance |
 | Explainability | Cluster medians compared with the normal 1st–99th percentile range | Human-readable threat evidence |
 
 ## Synthetic study area and data
@@ -153,7 +155,8 @@ This command:
 4. Scores the scenario observations.
 5. Performs cell-aware spatio-temporal clustering.
 6. Generates cluster diagnostics.
-7. Rebuilds the static maps.
+7. Plans supporting synthetic access routes.
+8. Rebuilds the static maps.
 
 ## Launch the dashboard
 
@@ -168,6 +171,7 @@ The dashboard provides:
 - an interactive investigation map;
 - layer controls for routes, stations, isolated alerts and priority areas;
 - an investigation-priority queue;
+- a supporting fictional access-route plan;
 - human-readable threat evidence;
 - synthetic benchmark metrics; and
 - governance and limitation statements.
@@ -189,6 +193,7 @@ python -m pytest
 | Clustered observations | `data/processed/clustered_observations.parquet` |
 | Cluster summary | `data/processed/alert_cluster_summary.csv` |
 | Cluster diagnostics | `data/processed/cluster_feature_diagnostics.csv` |
+| Supporting response plan | `data/processed/response_route_plan.csv` |
 | Evaluation metrics | `data/processed/evaluation_metrics.json` |
 | Baseline map | `docs/baseline_network_map.png` |
 | Scenario map | `docs/cloned_cell_scenario_map.png` |
@@ -218,6 +223,7 @@ CellDefense-GeoAI/
 │   ├── diagnose_clusters.py
 │   ├── generate_baseline.py
 │   ├── generate_scenario_dataset.py
+│   ├── plan_response_routes.py
 │   ├── plot_baseline.py
 │   ├── plot_detection_results.py
 │   ├── plot_scenario.py
@@ -279,8 +285,9 @@ cybersecurity requirements.
 - Spatio-temporal corroboration currently uses fixed 200-metre and 120-second
   neighbourhood limits; threshold sensitivity requires validation on
   independent real-world data.
-- Road-network response routing is a planned supporting feature and is not
-  part of the current implemented MVP.
+- Supporting access planning uses fictional drive routes and endpoint
+  minimisation; it is not a verified road-network route and must not be used
+  for real navigation.
 
 ## Future validation
 
@@ -292,5 +299,5 @@ A responsible next stage would require:
 4. Independent geographic and temporal validation areas.
 5. False-positive review by RF and cybersecurity specialists.
 6. Data-protection, access-control and retention assessment.
-7. Supporting road-network routing after the investigation areas are
-   validated.
+7. Replacement of fictional access planning with an authorised, verified
+   road-network routing source after investigation areas are validated.

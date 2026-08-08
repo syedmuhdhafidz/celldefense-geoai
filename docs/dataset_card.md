@@ -187,6 +187,7 @@ establish expected performance in a live telecommunications environment.
   expected from real investigations.
 - The fictional reference inventory is complete, unlike many real-world
   open cell-location datasets.
+- The supporting response routes are fictional drive routes and do not represent a verified road network.
 
 ## 13. Privacy, security and ethical controls
 
@@ -214,6 +215,7 @@ Appropriate uses include:
 - benchmarking unsupervised anomaly detection;
 - demonstrating spatio-temporal alert corroboration;
 - developing investigation-priority maps;
+- demonstrating fictional supporting access-route planning;
 - evaluating human-readable threat explanations; and
 - hackathon demonstrations and educational research.
 
@@ -242,3 +244,4 @@ A responsible validation programme would require:
 6. Human review by RF engineering and cybersecurity specialists.
 7. Documented false-positive and false-negative analysis.
 8. Privacy, retention and access-control review before collection.
+9. Replacement of fictional access routes with an authorised, verified road-network routing source.

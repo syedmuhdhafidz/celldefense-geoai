@@ -8,6 +8,9 @@ import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 
+from shapely import wkt
+from shapely.geometry import LineString
+
 from celldefense.config import CYBERJAYA_AOI
 from celldefense.network import (
     SYNTHETIC_BASE_STATIONS,
@@ -33,6 +36,11 @@ EVALUATION_METRICS_PATH = (
     / "processed"
     / "evaluation_metrics.json"
 )
+RESPONSE_PLAN_PATH = (
+    Path("data")
+    / "processed"
+    / "response_route_plan.csv"
+)
 
 MAP_CENTRE = [
     (
@@ -50,6 +58,7 @@ MAP_CENTRE = [
 
 @st.cache_data
 def load_dashboard_data() -> tuple[
+    pd.DataFrame,
     pd.DataFrame,
     pd.DataFrame,
     pd.DataFrame,
@@ -80,6 +89,12 @@ def load_dashboard_data() -> tuple[
             "Evaluation metrics are missing. Run "
             "'python scripts/train_detector.py' first."
         )
+        
+    if not RESPONSE_PLAN_PATH.exists():
+        raise FileNotFoundError(
+            "The response plan is missing. Run "
+            "'python scripts/plan_response_routes.py' first."
+        )
 
     observations = pd.read_parquet(
         CLUSTERED_DATA_PATH
@@ -102,6 +117,9 @@ def load_dashboard_data() -> tuple[
         
     diagnostics = pd.read_csv(
         DIAGNOSTICS_PATH
+    )
+    response_plan = pd.read_csv(
+        RESPONSE_PLAN_PATH
     )
     evaluation_metrics = json.loads(
         EVALUATION_METRICS_PATH.read_text(
@@ -137,6 +155,7 @@ def load_dashboard_data() -> tuple[
         observations,
         cluster_summary,
         diagnostics,
+        response_plan,
         evaluation_metrics,
     )
 
@@ -268,6 +287,107 @@ def add_isolated_alerts(
         ).add_to(noise_layer)
 
     noise_layer.add_to(map_object)
+
+
+def add_response_routes(
+    map_object: folium.Map,
+    response_plan: pd.DataFrame,
+) -> None:
+    """Add fictional supporting access plans to the map."""
+
+    route_layer = folium.FeatureGroup(
+        name="Synthetic response access plan",
+        show=True,
+    )
+
+    for plan in response_plan.itertuples():
+        response_path = wkt.loads(
+            plan.path_wkt
+        )
+
+        if not isinstance(
+            response_path,
+            LineString,
+        ):
+            raise ValueError(
+                "Response path must be a LineString."
+            )
+
+        path_coordinates = [
+            (latitude, longitude)
+            for longitude, latitude
+            in response_path.coords
+        ]
+
+        folium.PolyLine(
+            locations=path_coordinates,
+            color="#1565c0",
+            weight=5,
+            opacity=0.9,
+            tooltip=(
+                f"Priority {int(plan.priority_rank)} "
+                "synthetic access plan"
+            ),
+            popup=folium.Popup(
+                (
+                    "<strong>Synthetic access plan</strong>"
+                    f"<br>Priority: "
+                    f"{int(plan.priority_rank)}"
+                    f"<br>Route: {plan.route_id}"
+                    f"<br>Staging endpoint: "
+                    f"{plan.staging_endpoint}"
+                    f"<br>Route distance: "
+                    f"{plan.route_distance_m / 1000:.2f} km"
+                    f"<br>Off-route distance: "
+                    f"{plan.off_route_distance_m:.1f} m"
+                    "<br><em>Not suitable for real "
+                    "navigation.</em>"
+                ),
+                max_width=320,
+            ),
+        ).add_to(route_layer)
+
+        folium.CircleMarker(
+            location=[
+                plan.staging_latitude,
+                plan.staging_longitude,
+            ],
+            radius=7,
+            color="#0d47a1",
+            weight=2,
+            fill=True,
+            fill_color="#1565c0",
+            fill_opacity=1.0,
+            tooltip=(
+                "Fictional response staging point"
+            ),
+            popup=(
+                f"Priority {int(plan.priority_rank)} "
+                "fictional staging point"
+            ),
+        ).add_to(route_layer)
+
+        folium.CircleMarker(
+            location=[
+                plan.access_latitude,
+                plan.access_longitude,
+            ],
+            radius=7,
+            color="#1b5e20",
+            weight=2,
+            fill=True,
+            fill_color="#43a047",
+            fill_opacity=1.0,
+            tooltip=(
+                "Nearest synthetic route access point"
+            ),
+            popup=(
+                f"Priority {int(plan.priority_rank)} "
+                "synthetic access point"
+            ),
+        ).add_to(route_layer)
+
+    route_layer.add_to(map_object)
 
 
 def add_investigation_clusters(
@@ -411,6 +531,7 @@ def add_investigation_clusters(
 def build_map(
     observations: pd.DataFrame,
     cluster_summary: pd.DataFrame,
+    response_plan: pd.DataFrame,
 ) -> folium.Map:
     """Build the interactive investigation map."""
 
@@ -426,6 +547,10 @@ def build_map(
         observations,
     )
     add_synthetic_stations(map_object)
+    add_response_routes(
+        map_object,
+        response_plan,
+    )
     add_isolated_alerts(
         map_object,
         observations,
@@ -471,6 +596,7 @@ def main() -> None:
             observations,
             cluster_summary,
             diagnostics,
+            response_plan,
             evaluation_metrics,
         ) = load_dashboard_data()
     except (
@@ -527,12 +653,14 @@ def main() -> None:
     (
         map_tab,
         investigation_tab,
+        response_tab,
         evidence_tab,
         governance_tab,
     ) = st.tabs(
         [
             "Investigation map",
             "Priority queue",
+            "Response plan",
             "Threat evidence",
             "Governance and limitations",
         ]
@@ -552,6 +680,7 @@ def main() -> None:
         investigation_map = build_map(
             observations,
             cluster_summary,
+            response_plan,
         )
         st_folium(
             investigation_map,
@@ -622,6 +751,123 @@ def main() -> None:
                 "authorised passive RF surveying within "
                 "the prioritised area."
             )
+
+    with response_tab:
+        st.markdown(
+            "### Supporting field-access plan"
+        )
+        st.write(
+            "For each priority area, the prototype finds "
+            "the nearest fictional route, projects an "
+            "access point onto it, and selects the shorter "
+            "path from either route endpoint."
+        )
+
+        if response_plan.empty:
+            st.success(
+                "No response access plan is required."
+            )
+        else:
+            response_display = response_plan.copy(
+                deep=True
+            )
+            response_display[
+                "route_distance_km"
+            ] = (
+                response_display[
+                    "route_distance_m"
+                ]
+                / 1000
+            ).round(2)
+            response_display[
+                "off_route_distance_m"
+            ] = response_display[
+                "off_route_distance_m"
+            ].round(1)
+
+            response_display = (
+                response_display.rename(
+                    columns={
+                        "priority_rank": "priority",
+                        "route_id": (
+                            "synthetic_route"
+                        ),
+                        "staging_endpoint": (
+                            "selected_endpoint"
+                        ),
+                        "staging_latitude": (
+                            "staging_lat"
+                        ),
+                        "staging_longitude": (
+                            "staging_lon"
+                        ),
+                        "access_latitude": (
+                            "access_lat"
+                        ),
+                        "access_longitude": (
+                            "access_lon"
+                        ),
+                    }
+                )
+            )
+
+            st.dataframe(
+                response_display[
+                    [
+                        "priority",
+                        "synthetic_route",
+                        "selected_endpoint",
+                        "route_distance_km",
+                        "off_route_distance_m",
+                        "staging_lat",
+                        "staging_lon",
+                        "access_lat",
+                        "access_lon",
+                    ]
+                ],
+                hide_index=True,
+                width="stretch",
+            )
+
+            first_plan = response_plan.sort_values(
+                by="priority_rank"
+            ).iloc[0]
+
+            response_metrics = st.columns(3)
+
+            response_metrics[0].metric(
+                "Selected synthetic route",
+                first_plan["route_id"],
+            )
+            response_metrics[1].metric(
+                "Route distance",
+                (
+                    f"{first_plan[
+                        'route_distance_m'
+                    ] / 1000:.2f} km"
+                ),
+            )
+            response_metrics[2].metric(
+                "Off-route distance",
+                (
+                    f"{first_plan[
+                        'off_route_distance_m'
+                    ]:.1f} m"
+                ),
+            )
+
+            st.info(
+                "Method: select the geographically nearest "
+                "synthetic route, then minimise distance "
+                "from either fictional route endpoint to "
+                "the projected access point."
+            )
+
+        st.warning(
+            "This access plan uses fictional drive routes. "
+            "It is a supporting demonstration and must not "
+            "be used for real navigation or deployment."
+        )
 
     with evidence_tab:
         st.markdown(
@@ -845,6 +1091,7 @@ def main() -> None:
 - Model performance on synthetic data does not establish real-world accuracy.
 - Coverage propagation is simplified and does not fully model terrain, buildings, antenna patterns or network optimisation.
 - Isolated alerts are retained for audit but are not escalated without spatio-temporal corroboration.
+- The supporting response plan uses fictional drive routes rather than a verified road network and is not suitable for real navigation.
             """
         )
 
