@@ -1,5 +1,6 @@
 """Interactive CellDefense GeoAI investigation dashboard."""
 
+import json
 from pathlib import Path
 
 import folium
@@ -22,6 +23,16 @@ CLUSTER_SUMMARY_PATH = (
     / "processed"
     / "alert_cluster_summary.csv"
 )
+DIAGNOSTICS_PATH = (
+    Path("data")
+    / "processed"
+    / "cluster_feature_diagnostics.csv"
+)
+EVALUATION_METRICS_PATH = (
+    Path("data")
+    / "processed"
+    / "evaluation_metrics.json"
+)
 
 MAP_CENTRE = [
     (
@@ -41,6 +52,8 @@ MAP_CENTRE = [
 def load_dashboard_data() -> tuple[
     pd.DataFrame,
     pd.DataFrame,
+    pd.DataFrame,
+    dict[str, float | int],
 ]:
     """Load clustered observations and investigation summaries."""
 
@@ -54,6 +67,18 @@ def load_dashboard_data() -> tuple[
         raise FileNotFoundError(
             "The cluster summary is missing. Run "
             "'python scripts/cluster_alerts.py' first."
+        )
+        
+    if not DIAGNOSTICS_PATH.exists():
+        raise FileNotFoundError(
+            "Cluster diagnostics are missing. Run "
+            "'python scripts/diagnose_clusters.py' first."
+        )
+
+    if not EVALUATION_METRICS_PATH.exists():
+        raise FileNotFoundError(
+            "Evaluation metrics are missing. Run "
+            "'python scripts/train_detector.py' first."
         )
 
     observations = pd.read_parquet(
@@ -74,6 +99,15 @@ def load_dashboard_data() -> tuple[
                 "Asia/Kuala_Lumpur"
             )
         )
+        
+    diagnostics = pd.read_csv(
+        DIAGNOSTICS_PATH
+    )
+    evaluation_metrics = json.loads(
+        EVALUATION_METRICS_PATH.read_text(
+            encoding="utf-8"
+        )
+    )
 
     required_observation_columns = {
         "timestamp",
@@ -99,7 +133,12 @@ def load_dashboard_data() -> tuple[
         observations["timestamp"]
     )
 
-    return observations, cluster_summary
+    return (
+        observations,
+        cluster_summary,
+        diagnostics,
+        evaluation_metrics,
+    )
 
 
 def add_routes(
@@ -428,9 +467,12 @@ def main() -> None:
     )
 
     try:
-        observations, cluster_summary = (
-            load_dashboard_data()
-        )
+        (
+            observations,
+            cluster_summary,
+            diagnostics,
+            evaluation_metrics,
+        ) = load_dashboard_data()
     except (
         FileNotFoundError,
         ValueError,
@@ -482,14 +524,18 @@ def main() -> None:
         "drive-test observations."
     )
 
-    map_tab, investigation_tab, governance_tab = (
-        st.tabs(
-            [
-                "Investigation map",
-                "Priority queue",
-                "Governance and limitations",
-            ]
-        )
+    (
+        map_tab,
+        investigation_tab,
+        evidence_tab,
+        governance_tab,
+    ) = st.tabs(
+        [
+            "Investigation map",
+            "Priority queue",
+            "Threat evidence",
+            "Governance and limitations",
+        ]
     )
 
     with map_tab:
@@ -577,6 +623,198 @@ def main() -> None:
                 "authorised passive RF surveying within "
                 "the prioritised area."
             )
+
+    with evidence_tab:
+        st.markdown(
+            "### Why was this area prioritised?"
+        )
+        st.write(
+            "The evidence below compares the suspicious "
+            "cluster with the central 98% range observed "
+            "in normal synthetic measurements."
+        )
+
+        if cluster_summary.empty:
+            st.success(
+                "No investigation cluster is available "
+                "for explanation."
+            )
+        elif diagnostics.empty:
+            st.warning(
+                "No feature diagnostics are available."
+            )
+        else:
+            priority_options = sorted(
+                (
+                    diagnostics["cluster_id"]
+                    .astype(int)
+                    + 1
+                ).unique()
+            )
+
+            selected_priority = st.selectbox(
+                "Investigation priority",
+                options=priority_options,
+                format_func=lambda value: (
+                    f"Priority area {value}"
+                ),
+            )
+            selected_cluster_id = (
+                int(selected_priority) - 1
+            )
+
+            cluster_evidence = diagnostics.loc[
+                diagnostics["cluster_id"].astype(
+                    int
+                )
+                == selected_cluster_id
+            ].copy()
+
+            feature_information = {
+                "neighbour_count": {
+                    "label": "Neighbour-cell count",
+                    "unit": "cells",
+                    "interpretation": (
+                        "Unusually few neighbouring cells "
+                        "were observed."
+                    ),
+                },
+                "rsrp_residual_db": {
+                    "label": "RSRP residual",
+                    "unit": "dB",
+                    "interpretation": (
+                        "The received signal was much "
+                        "stronger than expected for the "
+                        "reported cell distance."
+                    ),
+                },
+                "signal_distance_inconsistency": {
+                    "label": (
+                        "Signal-distance inconsistency"
+                    ),
+                    "unit": "derived score",
+                    "interpretation": (
+                        "Strong measurements occurred far "
+                        "from the reported reference-cell "
+                        "location."
+                    ),
+                },
+            }
+
+            evidence_rows: list[
+                dict[str, object]
+            ] = []
+
+            for (
+                feature_name,
+                feature_details,
+            ) in feature_information.items():
+                matching_rows = (
+                    cluster_evidence.loc[
+                        cluster_evidence["feature"]
+                        == feature_name
+                    ]
+                )
+
+                if matching_rows.empty:
+                    continue
+
+                evidence = matching_rows.iloc[0]
+                normal_minimum = float(
+                    evidence["normal_p01"]
+                )
+                normal_maximum = float(
+                    evidence["normal_p99"]
+                )
+                observed_median = float(
+                    evidence["cluster_median"]
+                )
+
+                evidence_rows.append(
+                    {
+                        "Evidence": (
+                            feature_details["label"]
+                        ),
+                        "Normal 98% range": (
+                            f"{normal_minimum:.2f} to "
+                            f"{normal_maximum:.2f}"
+                        ),
+                        "Cluster median": (
+                            f"{observed_median:.2f}"
+                        ),
+                        "Unit": (
+                            feature_details["unit"]
+                        ),
+                        "Interpretation": (
+                            feature_details[
+                                "interpretation"
+                            ]
+                        ),
+                    }
+                )
+
+            if evidence_rows:
+                st.dataframe(
+                    pd.DataFrame(evidence_rows),
+                    hide_index=True,
+                    width="stretch",
+                )
+            else:
+                st.warning(
+                    "No selected evidence features were "
+                    "found for this priority area."
+                )
+
+            st.warning(
+                "These indicators establish measurement "
+                "inconsistency, not malicious intent. "
+                "Confirmation requires authorised technical "
+                "investigation."
+            )
+
+        st.markdown(
+            "### Synthetic benchmark"
+        )
+        st.caption(
+            "Point-level performance on the controlled "
+            "synthetic cloned-cell-style scenario only."
+        )
+
+        benchmark_columns = st.columns(4)
+
+        benchmark_columns[0].metric(
+            "Precision",
+            (
+                f"{evaluation_metrics['precision']:.1%}"
+            ),
+        )
+        benchmark_columns[1].metric(
+            "Recall",
+            (
+                f"{evaluation_metrics['recall']:.1%}"
+            ),
+        )
+        benchmark_columns[2].metric(
+            "F1 score",
+            (
+                f"{evaluation_metrics['f1_score']:.1%}"
+            ),
+        )
+        benchmark_columns[3].metric(
+            "False-positive rate",
+            (
+                f"{evaluation_metrics[
+                    'false_positive_rate'
+                ]:.2%}"
+            ),
+        )
+
+        st.caption(
+            "Spatial corroboration subsequently retained "
+            "one 90-observation investigation cluster and "
+            "treated all 14 false-positive point alerts as "
+            "isolated noise."
+        )
 
     with governance_tab:
         st.markdown(
