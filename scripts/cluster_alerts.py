@@ -50,6 +50,7 @@ def main() -> None:
     clustered_observations = cluster_alerts(
         scored_observations=scored_observations,
         maximum_distance_metres=200.0,
+        maximum_time_gap_seconds=120.0,
         minimum_observations=5,
     )
     cluster_summary = summarise_alert_clusters(

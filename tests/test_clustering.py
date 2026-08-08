@@ -86,6 +86,11 @@ def test_non_alerts_remain_unclustered(
 def test_alerts_from_different_cells_are_not_merged() -> None:
     alerts = pd.DataFrame(
         {
+            "timestamp": pd.date_range(
+                start="2026-08-01 08:00:00+08:00",
+                periods=6,
+                freq="s"
+            ),
             "latitude": [2.9205] * 6,
             "longitude": [101.6685] * 6,
             "cell_id": [
@@ -121,6 +126,49 @@ def test_alerts_from_different_cells_are_not_merged() -> None:
 
     assert cell_001_clusters == {0}
     assert cell_004_clusters == {-1}
+
+
+def test_separate_alert_periods_are_not_merged() -> None:
+    first_period = pd.date_range(
+        start="2026-08-01 08:00:00+08:00",
+        periods=5,
+        freq="s",
+    )
+    second_period = pd.date_range(
+        start="2026-08-01 08:10:00+08:00",
+        periods=5,
+        freq="s",
+    )
+
+    alerts = pd.DataFrame(
+        {
+            "timestamp": [
+                *first_period,
+                *second_period,
+            ],
+            "latitude": [2.9205] * 10,
+            "longitude": [101.6685] * 10,
+            "cell_id": ["cell-001"] * 10,
+            "predicted_anomaly": [True] * 10,
+        }
+    )
+
+    clustered = cluster_alerts(
+        alerts,
+        maximum_distance_metres=200.0,
+        maximum_time_gap_seconds=120.0,
+        minimum_observations=5,
+    )
+
+    first_cluster_ids = set(
+        clustered.iloc[:5]["cluster_id"]
+    )
+    second_cluster_ids = set(
+        clustered.iloc[5:]["cluster_id"]
+    )
+
+    assert first_cluster_ids == {0}
+    assert second_cluster_ids == {1}
 
 
 def test_no_alerts_produce_empty_summary(

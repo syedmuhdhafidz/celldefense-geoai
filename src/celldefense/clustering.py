@@ -27,11 +27,13 @@ CLUSTER_SUMMARY_COLUMNS = [
 def cluster_alerts(
     scored_observations: pd.DataFrame,
     maximum_distance_metres: float = 200.0,
+    maximum_time_gap_seconds: float = 120.0,
     minimum_observations: int = 5,
 ) -> pd.DataFrame:
-    """Assign cell-aware spatial cluster identifiers to alerts."""
+    """Assign cell-aware spatio-temporal alert clusters."""
 
     required_columns = {
+        "timestamp",
         "latitude",
         "longitude",
         "cell_id",
@@ -49,6 +51,11 @@ def cluster_alerts(
     if maximum_distance_metres <= 0:
         raise ValueError(
             "maximum_distance_metres must be positive."
+        )
+
+    if maximum_time_gap_seconds <= 0:
+        raise ValueError(
+            "maximum_time_gap_seconds must be positive."
         )
 
     if minimum_observations < 2:
@@ -95,11 +102,49 @@ def cluster_alerts(
             )
         )
 
+        timestamps = pd.to_datetime(
+            cell_alerts["timestamp"],
+            utc=True,
+        )
+        timestamp_seconds = (
+            (
+                timestamps - timestamps.min()
+            )
+            .dt.total_seconds()
+            .to_numpy(dtype=float)
+        )
+
+        coordinate_differences = (
+            coordinates[:, np.newaxis, :]
+            - coordinates[np.newaxis, :, :]
+        )
+        spatial_distances = np.sqrt(
+            np.sum(
+                coordinate_differences**2,
+                axis=2,
+            )
+        )
+        temporal_distances = np.abs(
+            timestamp_seconds[:, np.newaxis]
+            - timestamp_seconds[np.newaxis, :]
+        )
+
+        normalised_distances = np.maximum(
+            (
+                spatial_distances
+                / maximum_distance_metres
+            ),
+            (
+                temporal_distances
+                / maximum_time_gap_seconds
+            ),
+        )
+
         local_labels = DBSCAN(
-            eps=maximum_distance_metres,
+            eps=1.0,
             min_samples=minimum_observations,
-            metric="euclidean",
-        ).fit_predict(coordinates)
+            metric="precomputed",
+        ).fit_predict(normalised_distances)
 
         global_labels = np.full(
             shape=len(local_labels),
