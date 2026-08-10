@@ -16,6 +16,9 @@ from celldefense.network import (
     SYNTHETIC_BASE_STATIONS,
 )
 
+STYLES_PATH = Path(__file__).with_name(
+    "styles.css"
+)
 CLUSTERED_DATA_PATH = (
     Path("data")
     / "processed"
@@ -57,6 +60,24 @@ MAP_CENTRE = [
 
 
 @st.cache_data
+def load_dashboard_styles() -> None:
+    """Load the shared CellDefense dashboard stylesheet."""
+
+    if not STYLES_PATH.exists():
+        raise FileNotFoundError(
+            f"Dashboard stylesheet not found: "
+            f"{STYLES_PATH}"
+        )
+
+    stylesheet = STYLES_PATH.read_text(
+        encoding="utf-8"
+    )
+
+    st.markdown(
+        f"<style>{stylesheet}</style>",
+        unsafe_allow_html=True,
+    )
+    
 def load_dashboard_data() -> tuple[
     pd.DataFrame,
     pd.DataFrame,
@@ -576,6 +597,8 @@ def main() -> None:
         page_icon="🖥️",
         layout="wide",
     )
+    
+    load_dashboard_styles()
 
     st.title(
         "CellDefense GeoAI"
