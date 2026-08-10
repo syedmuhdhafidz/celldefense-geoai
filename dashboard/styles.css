@@ -1376,3 +1376,166 @@ hr {
         border-left: 0;
     }
 }
+
+/* =========================================================
+   Responsible Use
+   ========================================================= */
+
+.cd-governance-intro {
+    margin-bottom: 1rem;
+}
+
+.cd-safeguard-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.cd-governance-card {
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    padding: 1rem;
+    border: 1px solid var(--cd-border);
+    border-top: 3px solid var(--cd-blue);
+    border-radius: var(--cd-radius);
+    background: var(--cd-surface);
+    box-shadow: var(--cd-shadow);
+}
+
+.cd-governance-card--slate {
+    border-top-color: #64748b;
+}
+
+.cd-governance-card--red {
+    border-top-color: var(--cd-red);
+}
+
+.cd-governance-card--amber {
+    border-top-color: var(--cd-amber);
+}
+
+.cd-governance-card--green {
+    border-top-color: var(--cd-green);
+}
+
+.cd-governance-card--wide {
+    grid-column: span 2;
+}
+
+.cd-governance-icon {
+    display: inline-flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--cd-surface-muted);
+    color: var(--cd-text);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.75rem;
+    font-weight: 750;
+}
+
+.cd-governance-card h3 {
+    margin: 0.8rem 0 0;
+    color: var(--cd-text);
+    font-size: 1.05rem;
+}
+
+.cd-governance-primary {
+    margin: 0.7rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.cd-governance-secondary {
+    margin: 0.45rem 0 0;
+    color: var(--cd-text-muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.cd-governance-status {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--cd-border);
+    color: var(--cd-text-muted);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.cd-status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--cd-blue);
+}
+
+.cd-status-dot--slate {
+    background: #64748b;
+}
+
+.cd-status-dot--red {
+    background: var(--cd-red);
+}
+
+.cd-status-dot--amber {
+    background: var(--cd-amber);
+}
+
+.cd-status-dot--green {
+    background: var(--cd-green);
+}
+
+.cd-governance-footer {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--cd-border);
+    border-left: 4px solid var(--cd-blue);
+    border-radius: var(--cd-radius);
+    background: var(--cd-blue-soft);
+}
+
+.cd-governance-footer p {
+    margin: 0.3rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .cd-safeguard-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .cd-governance-card--wide {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 560px) {
+    .cd-safeguard-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1830,6 +1830,163 @@ def render_response_plan(
         )
 
 
+def render_responsible_use() -> None:
+    """Render safeguards and current prototype limitations."""
+
+    st.markdown(
+        (
+            '<section class="cd-section-heading '
+            'cd-governance-intro">'
+            '<div class="cd-eyebrow">'
+            'Responsible Use'
+            '</div>'
+            '<h2>'
+            'Safeguards for authorised investigation'
+            '</h2>'
+            '<p>'
+            'This decision-support prototype prioritises '
+            'synthetic measurement inconsistencies for '
+            'human review. It does not confirm rogue base '
+            'stations or malicious infrastructure.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    cards_html = (
+        '<section class="cd-safeguard-grid">'
+        '<article class="cd-governance-card">'
+        '<div class="cd-governance-icon">DATA</div>'
+        '<h3>Data</h3>'
+        '<p class="cd-governance-primary">'
+        'Synthetic data only.'
+        '</p>'
+        '<p class="cd-governance-secondary">'
+        'No verified live mobile-network infrastructure '
+        'is integrated or exposed.'
+        '</p>'
+        '<div class="cd-governance-status">'
+        '<span>Prototype data boundary</span>'
+        '<span class="cd-status-dot"></span>'
+        '</div>'
+        '</article>'
+        '<article class="cd-governance-card '
+        'cd-governance-card--slate">'
+        '<div class="cd-governance-icon">PRIV</div>'
+        '<h3>Privacy</h3>'
+        '<p class="cd-governance-primary">'
+        'No subscriber identifiers or communications '
+        'content.'
+        '</p>'
+        '<p class="cd-governance-secondary">'
+        'No IMSI, IMEI, MSISDN, subscriber identity, '
+        'payload or communications content is stored.'
+        '</p>'
+        '<div class="cd-governance-status">'
+        '<span>Scope safeguard</span>'
+        '<span class="cd-status-dot '
+        'cd-status-dot--slate"></span>'
+        '</div>'
+        '</article>'
+        '<article class="cd-governance-card '
+        'cd-governance-card--red">'
+        '<div class="cd-governance-icon">AI</div>'
+        '<h3>Detection</h3>'
+        '<p class="cd-governance-primary">'
+        'Decision support, not proof.'
+        '</p>'
+        '<p class="cd-governance-secondary">'
+        'A high anomaly priority score identifies an area '
+        'for review. It is not proof of malicious intent '
+        'and is not a calibrated probability.'
+        '</p>'
+        '<div class="cd-governance-status">'
+        '<span>Human review required</span>'
+        '<span class="cd-status-dot '
+        'cd-status-dot--red"></span>'
+        '</div>'
+        '</article>'
+        '<article class="cd-governance-card '
+        'cd-governance-card--amber">'
+        '<div class="cd-governance-icon">FIELD</div>'
+        '<h3>Field verification</h3>'
+        '<p class="cd-governance-primary">'
+        'Authorised passive investigation required.'
+        '</p>'
+        '<p class="cd-governance-secondary">'
+        'Any field verification must be lawful, authorised '
+        'and use passive measurement procedures.'
+        '</p>'
+        '<div class="cd-governance-status">'
+        '<span>Operational requirement</span>'
+        '<span class="cd-status-dot '
+        'cd-status-dot--amber"></span>'
+        '</div>'
+        '</article>'
+        '<article class="cd-governance-card '
+        'cd-governance-card--green '
+        'cd-governance-card--wide">'
+        '<div class="cd-governance-icon">LIVE</div>'
+        '<h3>Real-world deployment</h3>'
+        '<p class="cd-governance-primary">'
+        'Verified infrastructure and calibrated equipment '
+        'would be required.'
+        '</p>'
+        '<p class="cd-governance-secondary">'
+        'Translation from synthetic telemetry to live '
+        'operations requires validated reference '
+        'infrastructure, calibrated devices, appropriate '
+        'data governance and operator or regulator review.'
+        '</p>'
+        '<div class="cd-governance-status">'
+        '<span>External validation required</span>'
+        '<span class="cd-status-dot '
+        'cd-status-dot--green"></span>'
+        '</div>'
+        '</article>'
+        '</section>'
+    )
+
+    st.markdown(
+        cards_html,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        (
+            '<section class="cd-governance-footer">'
+            '<div class="cd-detail-label">'
+            'Interpretation rule'
+            '</div>'
+            '<p>'
+            'Every output is an investigation-priority '
+            'recommendation for authorised human review. '
+            'No dashboard result should be presented as '
+            'confirmation of a rogue transmitter.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    with st.expander(
+        "Current prototype limitations",
+        expanded=False,
+    ):
+        st.markdown(
+            """
+- Performance metrics and anomaly behaviour are simulated.
+- The benchmark covers one cloned-cell-style geographic inconsistency scenario.
+- Performance on synthetic data does not establish real-world accuracy.
+- Coverage propagation is simplified and does not fully model terrain, buildings, antenna patterns or network optimisation.
+- Isolated alerts are retained for audit but are not escalated without spatio-temporal corroboration.
+- The supporting response plan uses fictional drive routes instead of a verified road network.
+- The response plan is not suitable for real navigation, dispatch or deployment.
+            """
+        )
+
+
 def main() -> None:
     """Render the CellDefense dashboard."""
 
@@ -1977,34 +2134,7 @@ def main() -> None:
         )
 
     with governance_tab:
-        st.markdown(
-            "### Responsible-use controls"
-        )
-
-        st.markdown(
-            """
-- All current observations and base stations are synthetic.
-- The prototype stores no IMSI, IMEI, MSISDN, subscriber identity, payload or communications content.
-- Threat scores prioritise observations for human review; they are not proof of malicious infrastructure.
-- Field verification must be authorised and use lawful, passive measurement procedures.
-- Real deployment would require calibrated devices, verified reference infrastructure and operator or regulator validation.
-            """
-        )
-
-        st.markdown(
-            "### Current limitations"
-        )
-
-        st.markdown(
-            """
-- Performance metrics and attack behaviour are simulated.
-- The benchmark covers one cloned-cell-style geographic inconsistency scenario.
-- Model performance on synthetic data does not establish real-world accuracy.
-- Coverage propagation is simplified and does not fully model terrain, buildings, antenna patterns or network optimisation.
-- Isolated alerts are retained for audit but are not escalated without spatio-temporal corroboration.
-- The supporting response plan uses fictional drive routes rather than a verified road network and is not suitable for real navigation.
-            """
-        )
+        render_responsible_use()
 
 
 if __name__ == "__main__":
