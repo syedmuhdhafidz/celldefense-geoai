@@ -913,6 +913,265 @@ def render_priority_overview(
     )
 
 
+def render_priority_queue(
+    cluster_summary: pd.DataFrame,
+) -> None:
+    """Render genuine corroborated investigation cases."""
+
+    st.markdown(
+        (
+            '<section class="cd-section-heading '
+            'cd-queue-intro">'
+            '<div class="cd-eyebrow">'
+            'Priority Queue'
+            '</div>'
+            '<h2>'
+            'Investigation cases'
+            '</h2>'
+            '<p>'
+            'Each case represents an existing '
+            'spatio-temporally corroborated cluster. '
+            'The ranking supports human triage and is not '
+            'a regulatory severity classification.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    if cluster_summary.empty:
+        st.success(
+            "No spatially corroborated investigation "
+            "cases are currently awaiting review."
+        )
+        return
+
+    ordered_cases = cluster_summary.sort_values(
+        by="priority_rank",
+        ascending=True,
+    )
+
+    for _, priority_area in ordered_cases.iterrows():
+        priority_rank = int(
+            priority_area["priority_rank"]
+        )
+        observation_count = int(
+            priority_area["observation_count"]
+        )
+        reported_cell_id = str(
+            priority_area["dominant_cell_id"]
+        )
+        mean_score = float(
+            priority_area["mean_threat_score"]
+        )
+        maximum_score = float(
+            priority_area["maximum_threat_score"]
+        )
+        latitude = float(
+            priority_area["centroid_latitude"]
+        )
+        longitude = float(
+            priority_area["centroid_longitude"]
+        )
+
+        start_time = pd.Timestamp(
+            priority_area["start_time"]
+        )
+        end_time = pd.Timestamp(
+            priority_area["end_time"]
+        )
+
+        duration_seconds = max(
+            0,
+            int(
+                (
+                    end_time - start_time
+                ).total_seconds()
+            ),
+        )
+        duration_minutes, remaining_seconds = divmod(
+            duration_seconds,
+            60,
+        )
+        duration_text = (
+            f"{duration_minutes} min "
+            f"{remaining_seconds} sec"
+        )
+
+        timezone_text = start_time.strftime("%z")
+        if len(timezone_text) == 5:
+            timezone_text = (
+                f"{timezone_text[:3]}:"
+                f"{timezone_text[3:]}"
+            )
+
+        detection_window = (
+            f"{start_time.strftime('%d %b %Y')}, "
+            f"{start_time.strftime('%H:%M:%S')}–"
+            f"{end_time.strftime('%H:%M:%S')} "
+            f"{timezone_text}"
+        )
+
+        if maximum_score.is_integer():
+            maximum_score_text = str(
+                int(maximum_score)
+            )
+        else:
+            maximum_score_text = (
+                f"{maximum_score:.1f}"
+            )
+
+        case_html = (
+            '<article class="cd-case-card">'
+            '<div class="cd-case-header">'
+            '<div class="cd-case-title-group">'
+            '<div class="cd-case-meta">'
+            '<span class="cd-review-badge">'
+            'Review required'
+            '</span>'
+            '<span class="cd-case-reference">'
+            f'Priority Area {priority_rank}'
+            '</span>'
+            '</div>'
+            '<h3>'
+            'Suspected geographic cell inconsistency'
+            '</h3>'
+            '<p>'
+            'Multiple unusual observations were detected '
+            'within a brief temporal window.'
+            '</p>'
+            '</div>'
+            '<div class="cd-case-score">'
+            '<div class="cd-case-score-value">'
+            f'{maximum_score_text}'
+            '<span>/100</span>'
+            '</div>'
+            '<div class="cd-case-score-label">'
+            'Investigation priority'
+            '</div>'
+            '</div>'
+            '</div>'
+            '<div class="cd-case-body">'
+            '<div class="cd-case-stats">'
+            '<div class="cd-case-stat">'
+            '<div class="cd-detail-label">'
+            'Supporting observations'
+            '</div>'
+            '<div class="cd-case-stat-value">'
+            f'{observation_count:,}'
+            '</div>'
+            '</div>'
+            '<div class="cd-case-stat">'
+            '<div class="cd-detail-label">'
+            'Observed duration'
+            '</div>'
+            '<div class="cd-case-stat-value">'
+            f'{duration_text}'
+            '</div>'
+            '</div>'
+            '<div class="cd-case-stat">'
+            '<div class="cd-detail-label">'
+            'Detection window'
+            '</div>'
+            '<div class="cd-case-stat-value">'
+            f'{detection_window}'
+            '</div>'
+            '</div>'
+            '</div>'
+            '<div class="cd-case-secondary">'
+            '<div class="cd-case-secondary-item">'
+            '<div class="cd-detail-label">'
+            'Reported cell identity'
+            '</div>'
+            '<div class="cd-case-stat-value">'
+            f'{reported_cell_id}'
+            '</div>'
+            '</div>'
+            '<div class="cd-case-secondary-item">'
+            '<div class="cd-detail-label">'
+            'Estimated cluster centre'
+            '</div>'
+            '<div class="cd-case-stat-value">'
+            f'{latitude:.5f}, {longitude:.5f}'
+            '</div>'
+            '</div>'
+            '</div>'
+            '<div class="cd-case-rationale">'
+            '<div class="cd-detail-label">'
+            'Why this requires attention'
+            '</div>'
+            '<p>'
+            'Multiple abnormal observations occurred close '
+            'together in space and time while reporting the '
+            'same cell identity. The mean anomaly priority '
+            f'score was {mean_score:.1f}/100.'
+            '</p>'
+            '</div>'
+            '<div class="cd-case-action">'
+            '<div class="cd-detail-label">'
+            'Recommended next step'
+            '</div>'
+            '<p>'
+            'Review the supporting evidence, validate the '
+            'reference-cell configuration and determine '
+            'whether an authorised passive field survey is '
+            'warranted.'
+            '</p>'
+            '</div>'
+            '</div>'
+            '</article>'
+        )
+
+        st.markdown(
+            case_html,
+            unsafe_allow_html=True,
+        )
+
+    technical_summary = (
+        ordered_cases[
+            [
+                "priority_rank",
+                "observation_count",
+                "start_time",
+                "end_time",
+                "centroid_latitude",
+                "centroid_longitude",
+                "mean_threat_score",
+                "maximum_threat_score",
+                "dominant_cell_id",
+            ]
+        ]
+        .rename(
+            columns={
+                "observation_count": (
+                    "corroborated_observations"
+                ),
+                "centroid_latitude": "latitude",
+                "centroid_longitude": "longitude",
+                "mean_threat_score": (
+                    "mean_priority_score"
+                ),
+                "maximum_threat_score": (
+                    "maximum_priority_score"
+                ),
+                "dominant_cell_id": (
+                    "reported_cell_id"
+                ),
+            }
+        )
+    )
+
+    with st.expander(
+        "Technical case details",
+        expanded=False,
+    ):
+        st.dataframe(
+            technical_summary,
+            hide_index=True,
+            width="stretch",
+        )
+
+
 def main() -> None:
     """Render the CellDefense dashboard."""
 
@@ -1041,67 +1300,9 @@ def main() -> None:
             )
 
     with investigation_tab:
-        st.markdown(
-            "### Prioritised investigation areas"
+        render_priority_queue(
+            cluster_summary
         )
-
-        if cluster_summary.empty:
-            st.success(
-                "No spatially corroborated priority "
-                "areas were found."
-            )
-        else:
-            display_summary = (
-                cluster_summary.copy(deep=True)
-            )
-            display_summary["priority"] = (
-                display_summary["priority_rank"]
-                .astype(int)
-            )
-            display_summary = display_summary.rename(
-                columns={
-                    "observation_count": (
-                        "corroborated_alerts"
-                    ),
-                    "dominant_cell_id": (
-                        "reported_cell_id"
-                    ),
-                    "mean_threat_score": (
-                        "mean_score"
-                    ),
-                    "maximum_threat_score": (
-                        "maximum_score"
-                    ),
-                    "centroid_latitude": "latitude",
-                    "centroid_longitude": "longitude",
-                }
-            )
-
-            st.dataframe(
-                display_summary[
-                    [
-                        "priority",
-                        "reported_cell_id",
-                        "corroborated_alerts",
-                        "mean_score",
-                        "maximum_score",
-                        "latitude",
-                        "longitude",
-                        "start_time",
-                        "end_time",
-                    ]
-                ],
-                hide_index=True,
-                width="stretch",
-            )
-
-            st.warning(
-                "Recommended response: validate the "
-                "reference-cell configuration, review "
-                "neighbour-cell measurements, and conduct "
-                "authorised passive RF surveying within "
-                "the prioritised area."
-            )
 
     with response_tab:
         st.markdown(
