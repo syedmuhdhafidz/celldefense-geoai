@@ -327,3 +327,235 @@ hr {
         min-height: 100px;
     }
 }
+
+/* =========================================================
+   CellDefense branded dashboard shell
+   ========================================================= */
+
+.cd-hero {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    padding: 1.7rem 1.8rem;
+    border: 1px solid var(--cd-border);
+    border-radius: var(--cd-radius-large);
+    background:
+        radial-gradient(
+            circle at 82% 20%,
+            rgb(37 99 235 / 0.09) 0,
+            rgb(37 99 235 / 0.025) 10rem,
+            transparent 18rem
+        ),
+        repeating-radial-gradient(
+            circle at 88% 40%,
+            transparent 0,
+            transparent 42px,
+            rgb(37 99 235 / 0.045) 43px,
+            transparent 44px
+        ),
+        var(--cd-surface);
+    box-shadow: var(--cd-shadow);
+}
+
+.cd-hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.cd-brand-title {
+    margin: 0;
+    color: var(--cd-text);
+    font-size: 2rem;
+    font-weight: 780;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+}
+
+.cd-brand-subtitle {
+    margin: 0.55rem 0 0;
+    color: var(--cd-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.cd-hero-statement {
+    max-width: 720px;
+    margin: 1rem 0 0;
+    color: var(--cd-text);
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.cd-workflow {
+    margin-top: 0.45rem;
+    color: var(--cd-text-muted);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+.cd-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: flex-end;
+}
+
+.cd-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid var(--cd-blue);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.76);
+    color: var(--cd-blue-dark);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.65rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.cd-safeguard {
+    margin-bottom: 0.8rem;
+    padding: 0.9rem 1.05rem;
+    border: 1px solid var(--cd-border);
+    border-left: 4px solid var(--cd-blue);
+    border-radius: var(--cd-radius);
+    background: var(--cd-surface);
+}
+
+.cd-eyebrow {
+    margin-bottom: 0.3rem;
+    color: var(--cd-blue-dark);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.66rem;
+    font-weight: 750;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.cd-safeguard p {
+    margin: 0;
+    color: var(--cd-text);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.cd-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.cd-kpi {
+    min-height: 112px;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--cd-border);
+    border-top: 3px solid var(--cd-blue);
+    border-radius: var(--cd-radius);
+    background: var(--cd-surface);
+    box-shadow: var(--cd-shadow);
+}
+
+.cd-kpi--amber {
+    border-top-color: var(--cd-amber);
+}
+
+.cd-kpi--red {
+    border-top-color: var(--cd-red);
+}
+
+.cd-kpi-label {
+    color: var(--cd-text-muted);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.66rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cd-kpi-value {
+    margin-top: 0.35rem;
+    color: var(--cd-text);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 1.8rem;
+    font-weight: 750;
+    letter-spacing: -0.05em;
+    line-height: 1;
+}
+
+.cd-kpi-description {
+    margin-top: 0.5rem;
+    color: var(--cd-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.35;
+}
+
+.cd-observation-caption {
+    margin: 0.55rem 0 1rem;
+    color: var(--cd-text-muted);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.72rem;
+}
+
+@media (max-width: 900px) {
+    .cd-hero-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .cd-badges {
+        justify-content: flex-start;
+    }
+
+    .cd-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .cd-hero {
+        padding: 1.25rem;
+    }
+
+    .cd-brand-title {
+        font-size: 1.65rem;
+    }
+
+    .cd-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}

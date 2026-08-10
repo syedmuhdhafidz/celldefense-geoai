@@ -589,6 +589,146 @@ def build_map(
     return map_object
 
 
+def render_dashboard_header() -> None:
+    """Render the shared dashboard identity and safeguards."""
+
+    st.markdown(
+        """
+        <section class="cd-hero">
+            <div class="cd-hero-content">
+                <div>
+                    <h1 class="cd-brand-title">
+                        CellDefense GeoAI
+                    </h1>
+                    <p class="cd-brand-subtitle">
+                        Cellular anomaly triage and field
+                        investigation support
+                    </p>
+                    <p class="cd-hero-statement">
+                        From cellular measurement anomalies to
+                        prioritised investigation decisions.
+                    </p>
+                    <div class="cd-workflow">
+                        Detect → Corroborate → Prioritise → Review
+                    </div>
+                </div>
+                <div class="cd-badges">
+                    <span class="cd-badge">
+                        Synthetic pilot
+                    </span>
+                    <span class="cd-badge">
+                        Cyberjaya
+                    </span>
+                    <span class="cd-badge">
+                        Decision support
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <section class="cd-safeguard">
+            <div class="cd-eyebrow">
+                Decision-support safeguard
+            </div>
+            <p>
+                The system identifies suspicious measurement
+                inconsistencies. It does not confirm a rogue base
+                station or establish malicious intent.
+            </p>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander(
+        "How to use this dashboard",
+        expanded=False,
+    ):
+        st.markdown(
+            """
+            1. Start with **Threat Overview** to locate
+               suspicious activity.
+            2. Use **Priority Queue** to identify the first
+               investigation area.
+            3. Review **Threat Evidence** to understand why
+               the area was prioritised.
+            4. Use **Response Plan** to inspect the synthetic
+               field-access plan.
+            5. Check **Responsible Use** before interpreting
+               or presenting the result.
+            """
+        )
+
+
+def render_summary_cards(
+    point_alert_count: int,
+    corroborated_alert_count: int,
+    isolated_alert_count: int,
+    investigation_cluster_count: int,
+    observation_count: int,
+) -> None:
+    """Render operational summary cards."""
+
+    summary_html = (
+        '<section class="cd-kpi-grid">'
+        '<article class="cd-kpi">'
+        '<div class="cd-kpi-label">'
+        'Suspicious observations'
+        '</div>'
+        '<div class="cd-kpi-value">'
+        f'{point_alert_count:,}'
+        '</div>'
+        '<div class="cd-kpi-description">'
+        'Flagged for analyst review'
+        '</div>'
+        '</article>'
+        '<article class="cd-kpi cd-kpi--red">'
+        '<div class="cd-kpi-label">'
+        'Corroborated alerts'
+        '</div>'
+        '<div class="cd-kpi-value">'
+        f'{corroborated_alert_count:,}'
+        '</div>'
+        '<div class="cd-kpi-description">'
+        'Supported by nearby observations'
+        '</div>'
+        '</article>'
+        '<article class="cd-kpi cd-kpi--amber">'
+        '<div class="cd-kpi-label">'
+        'Isolated alerts'
+        '</div>'
+        '<div class="cd-kpi-value">'
+        f'{isolated_alert_count:,}'
+        '</div>'
+        '<div class="cd-kpi-description">'
+        'Retained, but not escalated'
+        '</div>'
+        '</article>'
+        '<article class="cd-kpi cd-kpi--red">'
+        '<div class="cd-kpi-label">'
+        'Priority areas'
+        '</div>'
+        '<div class="cd-kpi-value">'
+        f'{investigation_cluster_count:,}'
+        '</div>'
+        '<div class="cd-kpi-description">'
+        'Require authorised review'
+        '</div>'
+        '</article>'
+        '</section>'
+        '<div class="cd-observation-caption">'
+        'Analysed observations: '
+        f'{observation_count:,} '
+        'synthetic drive-test measurements.'
+        '</div>'
+    )
+
+    st.markdown(
+        summary_html,
+        unsafe_allow_html=True,
+    )
+
+
 def main() -> None:
     """Render the CellDefense dashboard."""
 
@@ -599,20 +739,7 @@ def main() -> None:
     )
     
     load_dashboard_styles()
-
-    st.title(
-        "CellDefense GeoAI"
-    )
-    st.subheader(
-        "Suspicious base-station anomaly triage"
-    )
-
-    st.info(
-        "Synthetic decision-support demonstration for "
-        "Cyberjaya. A priority area indicates where further "
-        "RF investigation may be warranted; it does not "
-        "confirm the presence of a rogue base station."
-    )
+    render_dashboard_header()
 
     try:
         (
@@ -649,43 +776,31 @@ def main() -> None:
         cluster_summary
     )
 
-    metric_columns = st.columns(4)
-
-    metric_columns[0].metric(
-        "Point alerts",
-        f"{point_alert_count:,}",
-    )
-    metric_columns[1].metric(
-        "Corroborated alerts",
-        f"{corroborated_alert_count:,}",
-    )
-    metric_columns[2].metric(
-        "Isolated alerts",
-        f"{isolated_alert_count:,}",
-    )
-    metric_columns[3].metric(
-        "Priority areas",
-        f"{investigation_cluster_count:,}",
-    )
-
-    st.caption(
-        f"Analysed {len(observations):,} synthetic "
-        "drive-test observations."
+    render_summary_cards(
+        point_alert_count=point_alert_count,
+        corroborated_alert_count=(
+            corroborated_alert_count
+        ),
+        isolated_alert_count=isolated_alert_count,
+        investigation_cluster_count=(
+            investigation_cluster_count
+        ),
+        observation_count=len(observations),
     )
 
     (
         map_tab,
         investigation_tab,
-        response_tab,
         evidence_tab,
+        response_tab,
         governance_tab,
     ) = st.tabs(
         [
-            "Investigation map",
-            "Priority queue",
-            "Response plan",
-            "Threat evidence",
-            "Governance and limitations",
+            "Threat Overview",
+            "Priority Queue",
+            "Threat Evidence",
+            "Response Plan",
+            "Responsible Use",
         ]
     )
 
