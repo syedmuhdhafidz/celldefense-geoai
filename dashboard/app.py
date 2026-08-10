@@ -727,6 +727,190 @@ def render_summary_cards(
         summary_html,
         unsafe_allow_html=True,
     )
+    
+    
+def render_priority_overview(
+    cluster_summary: pd.DataFrame,
+) -> None:
+    """Render the highest-priority investigation summary."""
+
+    if cluster_summary.empty:
+        st.success(
+            "No spatially corroborated priority areas "
+            "were found."
+        )
+        return
+
+    priority_area = cluster_summary.sort_values(
+        by="priority_rank",
+        ascending=True,
+    ).iloc[0]
+
+    start_time = pd.Timestamp(
+        priority_area["start_time"]
+    )
+    end_time = pd.Timestamp(
+        priority_area["end_time"]
+    )
+
+    duration_seconds = max(
+        0,
+        int(
+            (
+                end_time - start_time
+            ).total_seconds()
+        ),
+    )
+    duration_minutes, remaining_seconds = divmod(
+        duration_seconds,
+        60,
+    )
+    duration_text = (
+        f"{duration_minutes} min "
+        f"{remaining_seconds} sec"
+    )
+
+    timezone_text = start_time.strftime("%z")
+    if len(timezone_text) == 5:
+        timezone_text = (
+            f"{timezone_text[:3]}:"
+            f"{timezone_text[3:]}"
+        )
+
+    detection_window = (
+        f"{start_time.strftime('%d %b %Y')}, "
+        f"{start_time.strftime('%H:%M:%S')}–"
+        f"{end_time.strftime('%H:%M:%S')} "
+        f"{timezone_text}"
+    )
+
+    priority_rank = int(
+        priority_area["priority_rank"]
+    )
+    observation_count = int(
+        priority_area["observation_count"]
+    )
+    reported_cell_id = str(
+        priority_area["dominant_cell_id"]
+    )
+    latitude = float(
+        priority_area["centroid_latitude"]
+    )
+    longitude = float(
+        priority_area["centroid_longitude"]
+    )
+    priority_score = float(
+        priority_area["maximum_threat_score"]
+    )
+
+    if priority_score.is_integer():
+        score_text = str(int(priority_score))
+    else:
+        score_text = f"{priority_score:.1f}"
+
+    panel_html = (
+        '<section class="cd-priority-panel">'
+        '<div class="cd-priority-panel-header">'
+        '<div class="cd-priority-status">'
+        '<span class="cd-priority-status-dot"></span>'
+        'Investigation review required'
+        '</div>'
+        '<h3>'
+        f'Priority Area {priority_rank}'
+        '</h3>'
+        '<p>'
+        f'{observation_count:,} corroborated observations '
+        f'associated with reported {reported_cell_id}.'
+        '</p>'
+        '</div>'
+        '<div class="cd-priority-panel-body">'
+        '<div class="cd-detail-grid">'
+        '<div>'
+        '<div class="cd-detail-label">'
+        'Reported cell'
+        '</div>'
+        '<div class="cd-detail-value">'
+        f'{reported_cell_id}'
+        '</div>'
+        '</div>'
+        '<div>'
+        '<div class="cd-detail-label">'
+        'Corroborated observations'
+        '</div>'
+        '<div class="cd-detail-value">'
+        f'{observation_count:,}'
+        '</div>'
+        '</div>'
+        '<div>'
+        '<div class="cd-detail-label">'
+        'Detection window'
+        '</div>'
+        '<div class="cd-detail-value">'
+        f'{detection_window}'
+        '</div>'
+        '</div>'
+        '<div>'
+        '<div class="cd-detail-label">'
+        'Observed duration'
+        '</div>'
+        '<div class="cd-detail-value">'
+        f'{duration_text}'
+        '</div>'
+        '</div>'
+        '</div>'
+        '<div class="cd-location-box">'
+        '<div class="cd-detail-label">'
+        'Estimated cluster centre'
+        '</div>'
+        '<div class="cd-detail-value">'
+        f'{latitude:.5f}, {longitude:.5f}'
+        '</div>'
+        '</div>'
+        '<div class="cd-priority-score">'
+        '<div>'
+        '<div class="cd-detail-label">'
+        'Investigation priority score'
+        '</div>'
+        '<div class="cd-kpi-description">'
+        'Relative anomaly score for prioritisation; '
+        'not a probability.'
+        '</div>'
+        '</div>'
+        '<div class="cd-score-number">'
+        f'{score_text}'
+        '<span class="cd-score-denominator">'
+        '/100'
+        '</span>'
+        '</div>'
+        '</div>'
+        '<div class="cd-why-box">'
+        '<div class="cd-detail-label">'
+        'Why this matters'
+        '</div>'
+        '<p>'
+        'Multiple unusual measurements occurred close '
+        'together in space and time while reporting the '
+        'same cell identity.'
+        '</p>'
+        '</div>'
+        '<div class="cd-next-step">'
+        '<div class="cd-detail-label">'
+        'Recommended next step'
+        '</div>'
+        '<p>'
+        'Review the threat evidence, validate reference-cell '
+        'configuration and plan an authorised passive RF '
+        'survey if further investigation is warranted.'
+        '</p>'
+        '</div>'
+        '</div>'
+        '</section>'
+    )
+
+    st.markdown(
+        panel_html,
+        unsafe_allow_html=True,
+    )
 
 
 def main() -> None:
@@ -806,26 +990,55 @@ def main() -> None:
 
     with map_tab:
         st.markdown(
-            "### Spatio-temporal alert corroboration"
-        )
-        st.write(
-            "Use the layer control in the upper-right "
-            "corner of the map to show or hide routes, "
-            "stations, isolated alerts and investigation "
-            "zones."
+            (
+                '<section class="cd-section-heading">'
+                '<div class="cd-eyebrow">'
+                'Threat Overview'
+                '</div>'
+                '<h2>'
+                'What is happening and where?'
+                '</h2>'
+                '<p>'
+                'Priority areas indicate where authorised '
+                'follow-up should begin. They identify '
+                'spatio-temporally corroborated measurement '
+                'inconsistencies and do not establish '
+                'malicious activity.'
+                '</p>'
+                '</section>'
+            ),
+            unsafe_allow_html=True,
         )
 
-        investigation_map = build_map(
-            observations,
-            cluster_summary,
-            response_plan,
+        overview_columns = st.columns(
+            [2.15, 1],
+            gap="large",
         )
-        st_folium(
-            investigation_map,
-            width=1200,
-            height=650,
-            returned_objects=[],
-        )
+
+        with overview_columns[0]:
+            st.caption(
+                "Use the map layer control to show or hide "
+                "synthetic routes, reference stations, "
+                "isolated alerts, corroborated alerts and "
+                "investigation zones."
+            )
+
+            investigation_map = build_map(
+                observations,
+                cluster_summary,
+                response_plan,
+            )
+            st_folium(
+                investigation_map,
+                width=900,
+                height=650,
+                returned_objects=[],
+            )
+
+        with overview_columns[1]:
+            render_priority_overview(
+                cluster_summary
+            )
 
     with investigation_tab:
         st.markdown(

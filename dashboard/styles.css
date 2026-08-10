@@ -559,3 +559,189 @@ hr {
         grid-template-columns: 1fr;
     }
 }
+
+/* =========================================================
+   Threat Overview
+   ========================================================= */
+
+.cd-section-heading {
+    margin: 1.25rem 0 1rem;
+}
+
+.cd-section-heading .cd-eyebrow {
+    margin-bottom: 0.45rem;
+}
+
+.cd-section-heading h2 {
+    margin: 0;
+    color: var(--cd-text);
+    font-size: 1.55rem;
+    font-weight: 760;
+    letter-spacing: -0.035em;
+}
+
+.cd-section-heading p {
+    max-width: 760px;
+    margin: 0.55rem 0 0;
+    color: var(--cd-text-muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.cd-priority-panel {
+    overflow: hidden;
+    border: 1px solid var(--cd-border);
+    border-radius: var(--cd-radius-large);
+    background: var(--cd-surface);
+    box-shadow: var(--cd-shadow);
+}
+
+.cd-priority-panel-header {
+    padding: 1.1rem 1.15rem;
+    border-bottom: 1px solid var(--cd-border);
+    background: var(--cd-red-soft);
+}
+
+.cd-priority-status {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    color: #b91c1c;
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.67rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cd-priority-status-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: var(--cd-red);
+}
+
+.cd-priority-panel-header h3 {
+    margin: 0.55rem 0 0;
+    color: var(--cd-text);
+    font-size: 1.35rem;
+}
+
+.cd-priority-panel-header p {
+    margin: 0.55rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.cd-priority-panel-body {
+    padding: 1.1rem 1.15rem;
+}
+
+.cd-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.cd-detail-label {
+    color: var(--cd-text-muted);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cd-detail-value {
+    margin-top: 0.25rem;
+    color: var(--cd-text);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.cd-location-box {
+    margin-top: 1rem;
+    padding: 0.7rem 0.75rem;
+    border: 1px solid var(--cd-border);
+    border-radius: var(--cd-radius-small);
+    background: var(--cd-surface-muted);
+}
+
+.cd-priority-score {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding: 0.85rem;
+    border: 1px solid var(--cd-border);
+    border-radius: var(--cd-radius-small);
+}
+
+.cd-score-number {
+    color: var(--cd-red);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 1.8rem;
+    font-weight: 750;
+    letter-spacing: -0.06em;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.cd-score-denominator {
+    color: var(--cd-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.cd-why-box {
+    margin-top: 1rem;
+    padding: 0.85rem;
+    border-left: 3px solid var(--cd-blue);
+    background: var(--cd-blue-soft);
+}
+
+.cd-why-box p {
+    margin: 0.35rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.cd-next-step {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cd-border);
+}
+
+.cd-next-step p {
+    margin: 0.35rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+    .cd-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
