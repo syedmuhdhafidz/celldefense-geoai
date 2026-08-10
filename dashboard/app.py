@@ -1172,6 +1172,350 @@ def render_priority_queue(
         )
 
 
+def render_threat_evidence(
+    cluster_summary: pd.DataFrame,
+    diagnostics: pd.DataFrame,
+    evaluation_metrics: dict[str, object],
+) -> None:
+    """Render explainable evidence and benchmark results."""
+
+    st.markdown(
+        (
+            '<section class="cd-section-heading">'
+            '<div class="cd-eyebrow">'
+            'Threat Evidence'
+            '</div>'
+            '<h2>'
+            'Why did the system flag this area?'
+            '</h2>'
+            '<p>'
+            'The indicators compare measurements from the '
+            'selected area with the central 98% range of '
+            'normal synthetic observations.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    if cluster_summary.empty:
+        st.success(
+            "No investigation cluster is available "
+            "for explanation."
+        )
+        return
+
+    if diagnostics.empty:
+        st.warning(
+            "No feature diagnostics are available."
+        )
+        return
+
+    cluster_by_priority = {
+        int(cluster.priority_rank): int(
+            cluster.cluster_id
+        )
+        for cluster in cluster_summary.itertuples()
+    }
+
+    priority_options = sorted(
+        cluster_by_priority
+    )
+
+    selected_priority = st.selectbox(
+        "Investigation priority",
+        options=priority_options,
+        format_func=lambda value: (
+            f"Priority Area {value}"
+        ),
+        key="threat_evidence_priority",
+    )
+
+    selected_cluster_id = cluster_by_priority[
+        int(selected_priority)
+    ]
+
+    cluster_evidence = diagnostics.loc[
+        diagnostics["cluster_id"].astype(int)
+        == selected_cluster_id
+    ].copy()
+
+    feature_information = {
+        "neighbour_count": {
+            "title": (
+                "Unusually few neighbouring cells"
+            ),
+            "severity": "Abnormal",
+            "tone": "",
+            "interpretation": (
+                "Only a limited number of neighbouring "
+                "cells was visible compared with the normal "
+                "synthetic network pattern."
+            ),
+        },
+        "rsrp_residual_db": {
+            "title": (
+                "Signal much stronger than expected"
+            ),
+            "severity": "High deviation",
+            "tone": " cd-evidence-card--red",
+            "interpretation": (
+                "The received signal was much stronger than "
+                "expected for the reported cell distance."
+            ),
+        },
+        "signal_distance_inconsistency": {
+            "title": (
+                "Strong signal at an unexpected location"
+            ),
+            "severity": "High deviation",
+            "tone": "",
+            "interpretation": (
+                "Strong measurements occurred far from the "
+                "reported reference-cell location."
+            ),
+        },
+    }
+
+    evidence_cards: list[str] = []
+    outside_range_count = 0
+
+    for (
+        feature_name,
+        feature_details,
+    ) in feature_information.items():
+        matching_rows = cluster_evidence.loc[
+            cluster_evidence["feature"]
+            == feature_name
+        ]
+
+        if matching_rows.empty:
+            continue
+
+        evidence = matching_rows.iloc[0]
+
+        normal_minimum = float(
+            evidence["normal_p01"]
+        )
+        normal_maximum = float(
+            evidence["normal_p99"]
+        )
+        observed_median = float(
+            evidence["cluster_median"]
+        )
+
+        if bool(
+            evidence[
+                "cluster_median_outside_"
+                "normal_98_percent_range"
+            ]
+        ):
+            outside_range_count += 1
+
+        if feature_name == "neighbour_count":
+            observed_text = (
+                f"{observed_median:.0f} cell"
+            )
+            normal_text = (
+                f"{normal_minimum:.0f}–"
+                f"{normal_maximum:.0f} cells"
+            )
+        elif feature_name == "rsrp_residual_db":
+            observed_text = (
+                f"{observed_median:+.2f} dB"
+            )
+            normal_text = (
+                f"{normal_minimum:+.2f} to "
+                f"{normal_maximum:+.2f} dB"
+            )
+        else:
+            observed_text = (
+                f"{observed_median:.2f}"
+            )
+            normal_text = (
+                f"{normal_minimum:.2f} to "
+                f"{normal_maximum:.2f}"
+            )
+
+        evidence_cards.append(
+            (
+                '<article class="cd-evidence-card'
+                f'{feature_details["tone"]}">'
+                '<div class="cd-evidence-card-header">'
+                '<div class="cd-evidence-severity">'
+                f'{feature_details["severity"]}'
+                '</div>'
+                '<h3>'
+                f'{feature_details["title"]}'
+                '</h3>'
+                '</div>'
+                '<div class="cd-evidence-card-body">'
+                '<div class="cd-evidence-comparison">'
+                '<div>'
+                '<div class="cd-detail-label">'
+                'Observed'
+                '</div>'
+                '<div class="cd-evidence-number '
+                'cd-evidence-observed">'
+                f'{observed_text}'
+                '</div>'
+                '</div>'
+                '<div>'
+                '<div class="cd-detail-label">'
+                'Normal 98% range'
+                '</div>'
+                '<div class="cd-evidence-number">'
+                f'{normal_text}'
+                '</div>'
+                '</div>'
+                '</div>'
+                '<p class="cd-evidence-interpretation">'
+                f'{feature_details["interpretation"]}'
+                '</p>'
+                '</div>'
+                '</article>'
+            )
+        )
+
+    st.markdown(
+        (
+            '<section class="cd-evidence-assessment">'
+            '<div class="cd-eyebrow">'
+            'Evidence assessment'
+            '</div>'
+            '<p>'
+            f'{outside_range_count} key indicators fall '
+            'outside the expected synthetic baseline.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    if evidence_cards:
+        st.markdown(
+            (
+                '<section class="cd-evidence-grid">'
+                f'{"".join(evidence_cards)}'
+                '</section>'
+            ),
+            unsafe_allow_html=True,
+        )
+    else:
+        st.warning(
+            "No selected evidence features were found "
+            "for this priority area."
+        )
+
+    st.markdown(
+        (
+            '<section class="cd-evidence-conclusion">'
+            '<div class="cd-eyebrow">'
+            'Assessment'
+            '</div>'
+            '<p>'
+            'These observations are inconsistent with '
+            'expected synthetic network behaviour and '
+            'warrant authorised technical investigation. '
+            'They do not establish malicious intent.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    with st.expander(
+        "Full diagnostic table",
+        expanded=False,
+    ):
+        st.dataframe(
+            cluster_evidence,
+            hide_index=True,
+            width="stretch",
+        )
+
+    precision = float(
+        evaluation_metrics["precision"]
+    )
+    recall = float(
+        evaluation_metrics["recall"]
+    )
+    f1_score = float(
+        evaluation_metrics["f1_score"]
+    )
+    false_positive_rate = float(
+        evaluation_metrics["false_positive_rate"]
+    )
+    false_positive_count = int(
+        evaluation_metrics["false_positives"]
+    )
+    retained_observations = int(
+        cluster_summary["observation_count"].sum()
+    )
+
+    benchmark_html = (
+        '<section class="cd-benchmark-section">'
+        '<div class="cd-eyebrow">'
+        'Performance Evaluation'
+        '</div>'
+        '<h3>'
+        'Model validation — synthetic benchmark'
+        '</h3>'
+        '<p class="cd-benchmark-description">'
+        'Controlled synthetic-scenario performance only; '
+        'these results do not establish real-world '
+        'performance.'
+        '</p>'
+        '<div class="cd-benchmark-grid">'
+        '<article class="cd-benchmark-card">'
+        '<div class="cd-detail-label">'
+        'Precision'
+        '</div>'
+        '<div class="cd-benchmark-value">'
+        f'{precision:.1%}'
+        '</div>'
+        '</article>'
+        '<article class="cd-benchmark-card">'
+        '<div class="cd-detail-label">'
+        'Recall'
+        '</div>'
+        '<div class="cd-benchmark-value">'
+        f'{recall:.1%}'
+        '</div>'
+        '</article>'
+        '<article class="cd-benchmark-card">'
+        '<div class="cd-detail-label">'
+        'F1 score'
+        '</div>'
+        '<div class="cd-benchmark-value">'
+        f'{f1_score:.1%}'
+        '</div>'
+        '</article>'
+        '<article class="cd-benchmark-card">'
+        '<div class="cd-detail-label">'
+        'False-positive rate'
+        '</div>'
+        '<div class="cd-benchmark-value">'
+        f'{false_positive_rate:.2%}'
+        '</div>'
+        '</article>'
+        '</div>'
+        '<p class="cd-benchmark-note">'
+        'Spatio-temporal corroboration subsequently '
+        f'retained {retained_observations:,} observations '
+        'in priority areas and treated '
+        f'{false_positive_count:,} false-positive point '
+        'alerts as isolated noise.'
+        '</p>'
+        '</section>'
+    )
+
+    st.markdown(
+        benchmark_html,
+        unsafe_allow_html=True,
+    )
+
+
 def main() -> None:
     """Render the CellDefense dashboard."""
 
@@ -1422,199 +1766,10 @@ def main() -> None:
         )
 
     with evidence_tab:
-        st.markdown(
-            "### Why was this area prioritised?"
-        )
-        st.write(
-            "The evidence below compares the suspicious "
-            "cluster with the central 98% range observed "
-            "in normal synthetic measurements."
-        )
-
-        if cluster_summary.empty:
-            st.success(
-                "No investigation cluster is available "
-                "for explanation."
-            )
-        elif diagnostics.empty:
-            st.warning(
-                "No feature diagnostics are available."
-            )
-        else:
-            cluster_by_priority = {
-                int(cluster.priority_rank): int(
-                    cluster.cluster_id
-                )
-                for cluster in cluster_summary.itertuples()
-            }
-            priority_options = sorted(
-                cluster_by_priority
-            )
-
-            selected_priority = st.selectbox(
-                "Investigation priority",
-                options=priority_options,
-                format_func=lambda value: (
-                    f"Priority area {value}"
-                ),
-            )
-            selected_cluster_id = (
-                cluster_by_priority[
-                    int(selected_priority)
-                ]
-            )
-
-            cluster_evidence = diagnostics.loc[
-                diagnostics["cluster_id"].astype(
-                    int
-                )
-                == selected_cluster_id
-            ].copy()
-
-            feature_information = {
-                "neighbour_count": {
-                    "label": "Neighbour-cell count",
-                    "unit": "cells",
-                    "interpretation": (
-                        "Unusually few neighbouring cells "
-                        "were observed."
-                    ),
-                },
-                "rsrp_residual_db": {
-                    "label": "RSRP residual",
-                    "unit": "dB",
-                    "interpretation": (
-                        "The received signal was much "
-                        "stronger than expected for the "
-                        "reported cell distance."
-                    ),
-                },
-                "signal_distance_inconsistency": {
-                    "label": (
-                        "Signal-distance inconsistency"
-                    ),
-                    "unit": "derived score",
-                    "interpretation": (
-                        "Strong measurements occurred far "
-                        "from the reported reference-cell "
-                        "location."
-                    ),
-                },
-            }
-
-            evidence_rows: list[
-                dict[str, object]
-            ] = []
-
-            for (
-                feature_name,
-                feature_details,
-            ) in feature_information.items():
-                matching_rows = (
-                    cluster_evidence.loc[
-                        cluster_evidence["feature"]
-                        == feature_name
-                    ]
-                )
-
-                if matching_rows.empty:
-                    continue
-
-                evidence = matching_rows.iloc[0]
-                normal_minimum = float(
-                    evidence["normal_p01"]
-                )
-                normal_maximum = float(
-                    evidence["normal_p99"]
-                )
-                observed_median = float(
-                    evidence["cluster_median"]
-                )
-
-                evidence_rows.append(
-                    {
-                        "Evidence": (
-                            feature_details["label"]
-                        ),
-                        "Normal 98% range": (
-                            f"{normal_minimum:.2f} to "
-                            f"{normal_maximum:.2f}"
-                        ),
-                        "Cluster median": (
-                            f"{observed_median:.2f}"
-                        ),
-                        "Unit": (
-                            feature_details["unit"]
-                        ),
-                        "Interpretation": (
-                            feature_details[
-                                "interpretation"
-                            ]
-                        ),
-                    }
-                )
-
-            if evidence_rows:
-                st.dataframe(
-                    pd.DataFrame(evidence_rows),
-                    hide_index=True,
-                    width="stretch",
-                )
-            else:
-                st.warning(
-                    "No selected evidence features were "
-                    "found for this priority area."
-                )
-
-            st.warning(
-                "These indicators establish measurement "
-                "inconsistency, not malicious intent. "
-                "Confirmation requires authorised technical "
-                "investigation."
-            )
-
-        st.markdown(
-            "### Synthetic benchmark"
-        )
-        st.caption(
-            "Point-level performance on the controlled "
-            "synthetic cloned-cell-style scenario only."
-        )
-
-        benchmark_columns = st.columns(4)
-
-        benchmark_columns[0].metric(
-            "Precision",
-            (
-                f"{evaluation_metrics['precision']:.1%}"
-            ),
-        )
-        benchmark_columns[1].metric(
-            "Recall",
-            (
-                f"{evaluation_metrics['recall']:.1%}"
-            ),
-        )
-        benchmark_columns[2].metric(
-            "F1 score",
-            (
-                f"{evaluation_metrics['f1_score']:.1%}"
-            ),
-        )
-        benchmark_columns[3].metric(
-            "False-positive rate",
-            (
-                f"{evaluation_metrics[
-                    'false_positive_rate'
-                ]:.2%}"
-            ),
-        )
-
-        st.caption(
-            "Spatio-temporal corroboration subsequently retained "
-            "one 90-observation investigation cluster and "
-            "treated all 14 false-positive point alerts as "
-            "isolated noise."
+        render_threat_evidence(
+            cluster_summary=cluster_summary,
+            diagnostics=diagnostics,
+            evaluation_metrics=evaluation_metrics,
         )
 
     with governance_tab:

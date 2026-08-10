@@ -969,3 +969,192 @@ hr {
         border-left: 0;
     }
 }
+
+/* =========================================================
+   Threat Evidence
+   ========================================================= */
+
+.cd-evidence-assessment {
+    margin: 1rem 0 0.8rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--cd-border);
+    border-left: 4px solid var(--cd-amber);
+    border-radius: var(--cd-radius);
+    background: var(--cd-surface);
+}
+
+.cd-evidence-assessment p {
+    margin: 0.25rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.84rem;
+    font-weight: 650;
+}
+
+.cd-evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.cd-evidence-card {
+    overflow: hidden;
+    min-height: 210px;
+    border: 1px solid var(--cd-border);
+    border-top: 3px solid var(--cd-amber);
+    border-radius: var(--cd-radius);
+    background: var(--cd-surface);
+    box-shadow: var(--cd-shadow);
+}
+
+.cd-evidence-card--red {
+    border-top-color: var(--cd-red);
+}
+
+.cd-evidence-card-header {
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid var(--cd-border);
+}
+
+.cd-evidence-severity {
+    color: #b45309;
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 0.6rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cd-evidence-card--red .cd-evidence-severity {
+    color: #b91c1c;
+}
+
+.cd-evidence-card h3 {
+    margin: 0.45rem 0 0;
+    color: var(--cd-text);
+    font-size: 1rem;
+    line-height: 1.35;
+}
+
+.cd-evidence-card-body {
+    padding: 0.85rem 0.9rem;
+}
+
+.cd-evidence-comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.cd-evidence-number {
+    margin-top: 0.3rem;
+    color: var(--cd-text);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.cd-evidence-observed {
+    color: var(--cd-red);
+}
+
+.cd-evidence-interpretation {
+    margin: 0.8rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--cd-border);
+    color: var(--cd-text-muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.cd-evidence-conclusion {
+    margin: 0.8rem 0 1.3rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--cd-border);
+    border-left: 4px solid var(--cd-red);
+    border-radius: var(--cd-radius);
+    background: var(--cd-red-soft);
+}
+
+.cd-evidence-conclusion p {
+    margin: 0.25rem 0 0;
+    color: var(--cd-text);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.cd-benchmark-section {
+    margin-top: 1.5rem;
+    padding-top: 1.3rem;
+    border-top: 1px solid var(--cd-border);
+}
+
+.cd-benchmark-section h3 {
+    margin: 0.4rem 0 0;
+    font-size: 1.2rem;
+}
+
+.cd-benchmark-description {
+    margin: 0.45rem 0 0.9rem;
+    color: var(--cd-text-muted);
+    font-size: 0.8rem;
+}
+
+.cd-benchmark-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.cd-benchmark-card {
+    padding: 0.85rem 0.9rem;
+    border: 1px solid var(--cd-border);
+    border-top: 3px solid var(--cd-blue);
+    border-radius: var(--cd-radius);
+    background: var(--cd-surface);
+}
+
+.cd-benchmark-value {
+    margin-top: 0.35rem;
+    color: var(--cd-text);
+    font-family:
+        "JetBrains Mono",
+        "Cascadia Code",
+        Consolas,
+        monospace;
+    font-size: 1.45rem;
+    font-weight: 750;
+    letter-spacing: -0.04em;
+}
+
+.cd-benchmark-note {
+    margin-top: 0.75rem;
+    color: var(--cd-text-muted);
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .cd-evidence-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cd-benchmark-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .cd-benchmark-grid,
+    .cd-evidence-comparison {
+        grid-template-columns: 1fr;
+    }
+}
