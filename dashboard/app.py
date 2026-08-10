@@ -1516,6 +1516,320 @@ def render_threat_evidence(
     )
 
 
+def render_response_plan(
+    response_plan: pd.DataFrame,
+    observations: pd.DataFrame,
+    cluster_summary: pd.DataFrame,
+) -> None:
+    """Render the supporting synthetic field-access plan."""
+
+    st.markdown(
+        (
+            '<section class="cd-section-heading">'
+            '<div class="cd-eyebrow">'
+            'Response Plan'
+            '</div>'
+            '<h2>'
+            'Field access plan — synthetic demonstration'
+            '</h2>'
+            '<p>'
+            'This view shows how authorised personnel could '
+            'approach a selected priority area using the '
+            'existing fictional route plan.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        (
+            '<section class="cd-limitation-banner">'
+            '<div class="cd-detail-label">'
+            'Crucial limitation'
+            '</div>'
+            '<p>'
+            'This access plan uses fictional drive routes. '
+            'It is a supporting demonstration and must not '
+            'be used for real navigation, dispatch or '
+            'deployment.'
+            '</p>'
+            '</section>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+    if response_plan.empty:
+        st.success(
+            "No synthetic access plan is currently "
+            "available for review."
+        )
+        return
+
+    ordered_plans = response_plan.sort_values(
+        by="priority_rank"
+    )
+
+    priority_options = [
+        int(value)
+        for value in ordered_plans[
+            "priority_rank"
+        ].tolist()
+    ]
+
+    selected_priority = st.selectbox(
+        "Priority area response plan",
+        options=priority_options,
+        format_func=lambda value: (
+            f"Priority Area {value}"
+        ),
+        key="response_plan_priority",
+    )
+
+    selected_plan = ordered_plans.loc[
+        ordered_plans["priority_rank"].astype(int)
+        == int(selected_priority)
+    ].iloc[0]
+
+    route_id = str(
+        selected_plan["route_id"]
+    )
+    endpoint = str(
+        selected_plan["staging_endpoint"]
+    )
+    route_distance_metres = float(
+        selected_plan["route_distance_m"]
+    )
+    off_route_distance_metres = float(
+        selected_plan["off_route_distance_m"]
+    )
+    staging_latitude = float(
+        selected_plan["staging_latitude"]
+    )
+    staging_longitude = float(
+        selected_plan["staging_longitude"]
+    )
+    access_latitude = float(
+        selected_plan["access_latitude"]
+    )
+    access_longitude = float(
+        selected_plan["access_longitude"]
+    )
+
+    route_distance_km = (
+        route_distance_metres / 1000
+    )
+
+    plan_html = (
+        '<div class="cd-plan-status">'
+        '<span class="cd-plan-status-dot"></span>'
+        'Synthetic plan ready for review'
+        '</div>'
+        '<section class="cd-route-parameters">'
+        '<div class="cd-route-parameters-header">'
+        '<h3>Route parameters</h3>'
+        '</div>'
+        '<div class="cd-route-parameter-grid">'
+        '<div class="cd-route-parameter">'
+        '<div class="cd-detail-label">'
+        'Selected synthetic route'
+        '</div>'
+        '<div class="cd-route-parameter-value">'
+        f'{route_id}'
+        '</div>'
+        '</div>'
+        '<div class="cd-route-parameter">'
+        '<div class="cd-detail-label">'
+        'Route distance'
+        '</div>'
+        '<div class="cd-route-parameter-value">'
+        f'{route_distance_km:.2f} km'
+        '</div>'
+        '</div>'
+        '<div class="cd-route-parameter">'
+        '<div class="cd-detail-label">'
+        'Final off-route gap'
+        '</div>'
+        '<div class="cd-route-parameter-value">'
+        f'{off_route_distance_metres:.1f} m'
+        '</div>'
+        '</div>'
+        '</div>'
+        '</section>'
+    )
+
+    st.markdown(
+        plan_html,
+        unsafe_allow_html=True,
+    )
+
+    response_columns = st.columns(
+        [1.15, 1],
+        gap="large",
+    )
+
+    with response_columns[0]:
+        flow_html = (
+            '<section class="cd-flow-panel">'
+            '<h3>Access sequence</h3>'
+            '<div class="cd-flow-step">'
+            '<span class="cd-flow-marker '
+            'cd-flow-marker--green"></span>'
+            '<div class="cd-flow-content">'
+            '<div class="cd-flow-title">'
+            'Staging point'
+            '</div>'
+            '<div class="cd-flow-description">'
+            f'Selected fictional route {endpoint} endpoint '
+            f'at {staging_latitude:.5f}, '
+            f'{staging_longitude:.5f}.'
+            '</div>'
+            '</div>'
+            '</div>'
+            '<div class="cd-flow-connector">'
+            f'↓ {route_distance_km:.2f} km along {route_id}'
+            '</div>'
+            '<div class="cd-flow-step">'
+            '<span class="cd-flow-marker"></span>'
+            '<div class="cd-flow-content">'
+            '<div class="cd-flow-title">'
+            'Access point'
+            '</div>'
+            '<div class="cd-flow-description">'
+            'Projected access point on the selected '
+            f'synthetic route at {access_latitude:.5f}, '
+            f'{access_longitude:.5f}.'
+            '</div>'
+            '</div>'
+            '</div>'
+            '<div class="cd-flow-connector '
+            'cd-flow-connector--amber">'
+            f'↓ {off_route_distance_metres:.1f} m '
+            'final access gap'
+            '</div>'
+            '<div class="cd-flow-step">'
+            '<span class="cd-flow-marker '
+            'cd-flow-marker--red"></span>'
+            '<div class="cd-flow-content">'
+            '<div class="cd-flow-title">'
+            f'Priority Area {selected_priority}'
+            '</div>'
+            '<div class="cd-flow-description">'
+            'Area identified for authorised human review; '
+            'not a confirmed malicious transmitter.'
+            '</div>'
+            '</div>'
+            '</div>'
+            '<div class="cd-method-note">'
+            '<strong>Method:</strong> select the '
+            'geographically nearest synthetic route, then '
+            'minimise distance from either fictional route '
+            'endpoint to the projected access point.'
+            '</div>'
+            '</section>'
+        )
+
+        st.markdown(
+            flow_html,
+            unsafe_allow_html=True,
+        )
+
+    with response_columns[1]:
+        st.markdown(
+            '<div class="cd-response-map-title">'
+            'Focused route map'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+        focused_map = build_map(
+            observations,
+            cluster_summary,
+            response_plan,
+        )
+
+        minimum_latitude = min(
+            staging_latitude,
+            access_latitude,
+        ) - 0.003
+        maximum_latitude = max(
+            staging_latitude,
+            access_latitude,
+        ) + 0.003
+        minimum_longitude = min(
+            staging_longitude,
+            access_longitude,
+        ) - 0.003
+        maximum_longitude = max(
+            staging_longitude,
+            access_longitude,
+        ) + 0.003
+
+        focused_map.fit_bounds(
+            [
+                [
+                    minimum_latitude,
+                    minimum_longitude,
+                ],
+                [
+                    maximum_latitude,
+                    maximum_longitude,
+                ],
+            ]
+        )
+
+        st_folium(
+            focused_map,
+            width=620,
+            height=520,
+            returned_objects=[],
+            key=(
+                "response_plan_map_"
+                f"{selected_priority}"
+            ),
+        )
+
+    technical_plan = (
+        ordered_plans[
+            [
+                "priority_rank",
+                "route_id",
+                "staging_endpoint",
+                "route_distance_m",
+                "off_route_distance_m",
+                "staging_latitude",
+                "staging_longitude",
+                "access_latitude",
+                "access_longitude",
+            ]
+        ]
+        .copy(deep=True)
+    )
+    technical_plan["route_distance_km"] = (
+        technical_plan["route_distance_m"]
+        / 1000
+    ).round(2)
+    technical_plan[
+        "off_route_distance_m"
+    ] = technical_plan[
+        "off_route_distance_m"
+    ].round(1)
+
+    technical_plan = technical_plan.drop(
+        columns=["route_distance_m"]
+    )
+
+    with st.expander(
+        "Technical route details",
+        expanded=False,
+    ):
+        st.dataframe(
+            technical_plan,
+            hide_index=True,
+            width="stretch",
+        )
+
+
 def main() -> None:
     """Render the CellDefense dashboard."""
 
@@ -1649,120 +1963,10 @@ def main() -> None:
         )
 
     with response_tab:
-        st.markdown(
-            "### Supporting field-access plan"
-        )
-        st.write(
-            "For each priority area, the prototype finds "
-            "the nearest fictional route, projects an "
-            "access point onto it, and selects the shorter "
-            "path from either route endpoint."
-        )
-
-        if response_plan.empty:
-            st.success(
-                "No response access plan is required."
-            )
-        else:
-            response_display = response_plan.copy(
-                deep=True
-            )
-            response_display[
-                "route_distance_km"
-            ] = (
-                response_display[
-                    "route_distance_m"
-                ]
-                / 1000
-            ).round(2)
-            response_display[
-                "off_route_distance_m"
-            ] = response_display[
-                "off_route_distance_m"
-            ].round(1)
-
-            response_display = (
-                response_display.rename(
-                    columns={
-                        "priority_rank": "priority",
-                        "route_id": (
-                            "synthetic_route"
-                        ),
-                        "staging_endpoint": (
-                            "selected_endpoint"
-                        ),
-                        "staging_latitude": (
-                            "staging_lat"
-                        ),
-                        "staging_longitude": (
-                            "staging_lon"
-                        ),
-                        "access_latitude": (
-                            "access_lat"
-                        ),
-                        "access_longitude": (
-                            "access_lon"
-                        ),
-                    }
-                )
-            )
-
-            st.dataframe(
-                response_display[
-                    [
-                        "priority",
-                        "synthetic_route",
-                        "selected_endpoint",
-                        "route_distance_km",
-                        "off_route_distance_m",
-                        "staging_lat",
-                        "staging_lon",
-                        "access_lat",
-                        "access_lon",
-                    ]
-                ],
-                hide_index=True,
-                width="stretch",
-            )
-
-            first_plan = response_plan.sort_values(
-                by="priority_rank"
-            ).iloc[0]
-
-            response_metrics = st.columns(3)
-
-            response_metrics[0].metric(
-                "Selected synthetic route",
-                first_plan["route_id"],
-            )
-            response_metrics[1].metric(
-                "Route distance",
-                (
-                    f"{first_plan[
-                        'route_distance_m'
-                    ] / 1000:.2f} km"
-                ),
-            )
-            response_metrics[2].metric(
-                "Off-route distance",
-                (
-                    f"{first_plan[
-                        'off_route_distance_m'
-                    ]:.1f} m"
-                ),
-            )
-
-            st.info(
-                "Method: select the geographically nearest "
-                "synthetic route, then minimise distance "
-                "from either fictional route endpoint to "
-                "the projected access point."
-            )
-
-        st.warning(
-            "This access plan uses fictional drive routes. "
-            "It is a supporting demonstration and must not "
-            "be used for real navigation or deployment."
+        render_response_plan(
+            response_plan=response_plan,
+            observations=observations,
+            cluster_summary=cluster_summary,
         )
 
     with evidence_tab:
