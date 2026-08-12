@@ -255,6 +255,16 @@ baseline. A corroborated cluster means an area should be prioritised for
 authorised investigation. Neither result is proof of malicious
 infrastructure.
 
+## Artificial Intelligence Disclosure
+
+CellDefense GeoAI was developed with assistance from OpenAI ChatGPT and Codex for code drafting, review, debugging, testing, documentation and presentation planning. Google Stitch was used for interface design concepts.
+
+The prototype itself uses an unsupervised Isolation Forest for point-level anomaly detection and a cell-aware spatio-temporal DBSCAN process for alert corroboration.
+
+All AI-assisted outputs were reviewed, modified and validated by the project team. The team remains responsible for the final implementation and all project claims.
+
+See [AI_DISCLOSURE.md](AI_DISCLOSURE.md) for the complete disclosure.
+
 ## Ethics and privacy
 
 The current prototype stores no:
